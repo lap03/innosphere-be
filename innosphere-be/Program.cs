@@ -1,4 +1,6 @@
 
+using innosphere_be.Configurations;
+
 namespace innosphere_be
 {
     public class Program
@@ -9,6 +11,10 @@ namespace innosphere_be
 
             // Add services to the container.
 
+            //add register DB
+            ConfigurationService.RegisterContextDb(builder.Services, builder.Configuration);
+
+            //
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
