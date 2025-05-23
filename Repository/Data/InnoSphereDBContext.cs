@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Repository.Entities;
 using System;
 using System.Collections.Generic;
@@ -9,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Repository.Data
 {
-    public class InnoSphereDBContext : DbContext
+    public class InnoSphereDBContext : IdentityDbContext<User, IdentityRole, string>
     {
         public InnoSphereDBContext(DbContextOptions options) : base(options)
         {
@@ -20,6 +22,11 @@ namespace Repository.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            //rename AspNetUser and AspNetRole to Users and Roles
+            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.Entity<IdentityRole>().ToTable("Roles");
+            modelBuilder.Entity<IdentityUserRole<string>>().ToTable("UserRoles");
         }
     }
 }

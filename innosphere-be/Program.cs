@@ -14,6 +14,9 @@ namespace innosphere_be
             //add register DB
             ConfigurationService.RegisterContextDb(builder.Services, builder.Configuration);
 
+            //add register DI
+            ConfigurationService.RegisterDI(builder.Services, builder.Configuration);
+
             //
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
