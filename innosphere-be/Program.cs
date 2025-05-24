@@ -1,5 +1,6 @@
 
 using innosphere_be.Configurations;
+using innosphere_be.Mappings;
 
 namespace innosphere_be
 {
@@ -17,11 +18,16 @@ namespace innosphere_be
             //add register DI
             ConfigurationService.RegisterDI(builder.Services, builder.Configuration);
 
+            //add automapper
+            builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+
+            //set up swagger
+            ConfigurationService.SetupSwagger(builder.Services);
+
             //
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
