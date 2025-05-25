@@ -1,6 +1,7 @@
 
 using innosphere_be.Configurations;
 using innosphere_be.Mappings;
+using innosphere_be.MiddleWares;
 
 namespace innosphere_be
 {
@@ -39,6 +40,8 @@ namespace innosphere_be
             }
 
             app.UseHttpsRedirection();
+
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseAuthorization();
 
