@@ -13,19 +13,21 @@ namespace innosphere_be
 
             // Add services to the container.
 
-            //add register DB
-            ConfigurationService.RegisterContextDb(builder.Services, builder.Configuration);
-
-            //add register DI
-            ConfigurationService.RegisterDI(builder.Services, builder.Configuration);
-
-            //add automapper
-            builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
-
             //set up swagger
             ConfigurationService.SetupSwagger(builder.Services);
 
-            //
+            //set up automapper
+            builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+
+            //set up DB
+            ConfigurationService.SetupContextDb(builder.Services, builder.Configuration);
+
+            //set up DI
+            ConfigurationService.SetupDI(builder.Services, builder.Configuration);
+
+            //set up JWT authentication
+            ConfigurationService.SetupJWT(builder.Services, builder.Configuration);
+
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

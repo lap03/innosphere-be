@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Repository.Data;
@@ -6,26 +8,66 @@ using Repository.Entities;
 using Repository.Interfaces;
 using Repository.Repositories;
 using System.Reflection;
+using System.Text;
+using Service.Services;
+using Service.Interfaces;
 
 namespace innosphere_be.Configurations
 {
     public static class ConfigurationService
     {
-        public static void RegisterContextDb(this IServiceCollection services, IConfiguration configuration)
+        public static void SetupContextDb(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<InnoSphereDBContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), 
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
                 options => options.MigrationsAssembly(typeof(InnoSphereDBContext).Assembly.FullName)));
 
-            services.AddIdentity<User, IdentityRole>()
+            services.AddIdentity<User, IdentityRole>(options =>
+            {
+                options.Password.RequiredLength = 1;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireDigit = false;
+                options.Password.RequireNonAlphanumeric = false;
+
+                options.User.RequireUniqueEmail = true;
+            })
                 .AddEntityFrameworkStores<InnoSphereDBContext>()
                 .AddDefaultTokenProviders();
         }
 
-        public static void RegisterDI(this IServiceCollection services, IConfiguration configuration)
+        public static void SetupDI(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>)); 
+            services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
+
+            services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IInitService, InitService>();
+        }
+
+        public static void SetupJWT(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(x =>
+                {
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidIssuer = configuration["JWT:Issuer"],
+                        ValidAudience = configuration["JWT:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
+                    };
+                });
+
+            services.AddAuthorization();
         }
 
         public static void SetupSwagger(this IServiceCollection services)
