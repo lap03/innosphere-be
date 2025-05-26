@@ -2,12 +2,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Repository.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Repository.Data
 {
@@ -22,6 +16,9 @@ namespace Repository.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            //insert role
+            modelBuilder.ApplyConfiguration(new RoleHardData());
 
             //rename AspNetUser and AspNetRole to Users and Roles
             modelBuilder.Entity<User>().ToTable("Users");
