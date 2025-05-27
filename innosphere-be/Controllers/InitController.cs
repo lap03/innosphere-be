@@ -1,5 +1,4 @@
-﻿using i.Models.Requests.InitRequest;
-using innosphere_be.Models.Requests.InitRequest;
+﻿using innosphere_be.Models.Requests.InitRequest;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;

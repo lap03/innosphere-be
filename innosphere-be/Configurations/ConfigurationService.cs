@@ -1,16 +1,17 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Repository.Data;
 using Repository.Entities;
 using Repository.Interfaces;
 using Repository.Repositories;
+using Service.Interfaces;
+using Service.Models.EmailModels;
+using Service.Services;
 using System.Reflection;
 using System.Text;
-using Service.Services;
-using Service.Interfaces;
 
 namespace innosphere_be.Configurations
 {
@@ -33,16 +34,34 @@ namespace innosphere_be.Configurations
                 options.User.RequireUniqueEmail = true;
             })
                 .AddEntityFrameworkStores<InnoSphereDBContext>()
-                .AddDefaultTokenProviders();
+                .AddDefaultTokenProviders()
+                .AddTokenProvider<DataProtectorTokenProvider<User>>("REFRESHTOKENPROVIDER")
+                .AddTokenProvider<SixDigitTokenProvider<User>>("SixDigitOTP");
+
+            // Cấu hình lifespan cho từng provider
+            services.Configure<DataProtectionTokenProviderOptions>(opt =>
+            {
+                opt.TokenLifespan = TimeSpan.FromHours(3); // Mặc định
+            });
+            services.Configure<DataProtectionTokenProviderOptions>("SixDigitOTP", opt =>
+            {
+                opt.TokenLifespan = TimeSpan.FromMinutes(1); // Riêng cho OTP
+            });
         }
 
         public static void SetupDI(this IServiceCollection services, IConfiguration configuration)
         {
+            // Add MailSettings
+            services.Configure<EmailSettings>(configuration.GetSection("MailSettings"));
+
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped(typeof(IGenericRepo<>), typeof(GenericRepo<>));
 
+            services.AddScoped<IEmailService, EmailService>();
+
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IInitService, InitService>();
+            services.AddScoped<IAuthService, AuthService>();
         }
 
         public static void SetupJWT(this IServiceCollection services, IConfiguration configuration)
@@ -70,8 +89,28 @@ namespace innosphere_be.Configurations
             services.AddAuthorization();
         }
 
+        public static void SetupCors(this IServiceCollection services)
+        {
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllOrigins",
+                    builder =>
+                    {
+                        builder.AllowAnyOrigin()
+                               .AllowAnyMethod()
+                               .AllowAnyHeader();
+                    });
+            });
+        }
+
+        public static void SetupRouting(this IServiceCollection services)
+        {
+            services.AddRouting(options => options.LowercaseUrls = true);
+        }
+
         public static void SetupSwagger(this IServiceCollection services)
         {
+
             services.AddSwaggerGen(c =>
             {
                 // Loại bỏ MetadataController của OData khỏi tài liệu Swagger

@@ -13,6 +13,12 @@ namespace innosphere_be
 
             // Add services to the container.
 
+            //set up routing
+            builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+            //set up CORS
+            ConfigurationService.SetupCors(builder.Services);
+
             //set up swagger
             ConfigurationService.SetupSwagger(builder.Services);
 
@@ -45,8 +51,11 @@ namespace innosphere_be
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-            app.UseAuthorization();
+            app.UseCors();
 
+            app.UseAuthentication();
+
+            app.UseAuthorization();
 
             app.MapControllers();
 
