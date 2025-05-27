@@ -30,7 +30,7 @@ namespace innosphere_be.Controllers
 
         [HttpPost("register-worker")]
         [AllowAnonymous]
-        public async Task<IActionResult> RegisterWorker([FromBody] RegisterRequest model)
+        public async Task<IActionResult> RegisterWorker(CancellationToken cancellationToken, RegisterRequest model)
         {
             var user = new User
             {
@@ -41,13 +41,18 @@ namespace innosphere_be.Controllers
                 Address = model.Address,
                 PasswordHash = model.Password
             };
-            var result = await _authService.RegisterWorkerAsync(user, 0);
-            return Ok(result);
+            
+            await _authService.RegisterWorkerAsync(cancellationToken, user);
+
+            return Ok(new
+            {
+                message = "Register successful. Please check your email for the OTP to verify your account."
+            });
         }
 
         [HttpPost("register-employer")]
         [AllowAnonymous]
-        public async Task<IActionResult> RegisterEmployer([FromBody] RegisterRequest model)
+        public async Task<IActionResult> RegisterEmployer(CancellationToken cancellationToken, RegisterRequest model)
         {
             var user = new User
             {
@@ -58,7 +63,23 @@ namespace innosphere_be.Controllers
                 Address = model.Address,
                 PasswordHash = model.Password
             };
-            var result = await _authService.RegisterEmployerAsync(user, 0);
+            
+            await _authService.RegisterEmployerAsync(cancellationToken, user);
+            
+            return Ok(new
+            {
+                message = "Register successful. Please check your email for the OTP to verify your account."
+            });
+        }
+
+        [HttpPost("refresh-token")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshJwtModel model)
+        {
+            var result = await _authService.ValidateRefreshToken(model);
+            if (result == null)
+                return Unauthorized(new { message = "Invalid or expired refresh token" });
+
             return Ok(result);
         }
 
@@ -74,6 +95,29 @@ namespace innosphere_be.Controllers
 
             await _authService.LogoutAsync(email);
             return Ok(new { message = "Logout successful" });
+        }
+
+
+        [HttpPost("resend-email-otp")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResendEmailOtp([FromBody] VerifyEmailOtpRequest model, CancellationToken cancellationToken)
+        {
+            var result = await _authService.ResendEmailOtpAsync(model.Email, cancellationToken);
+            if (!result)
+                return BadRequest(new { message = "Cannot resend OTP. Email may not exist or is already confirmed." });
+
+            return Ok(new { message = "OTP has been resent. Please check your email." });
+        }
+
+        [HttpPost("verify-email-otp")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyEmailOtp([FromBody] VerifyEmailOtpRequest model)
+        {
+            var result = await _authService.VerifyEmailOtpAsync(model.Email, model.Otp);
+            if (!result)
+                return BadRequest(new { message = "Invalid or expired OTP" });
+
+            return Ok(new { message = "Email verified successfully" });
         }
     }
 }

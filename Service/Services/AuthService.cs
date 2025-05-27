@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Repository.Entities;
 using Repository.Helpers;
 using Service.Interfaces;
 using Service.Models.AuthModels;
+using Service.Models.EmailModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -15,25 +17,35 @@ namespace Service.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IInitService initService, IConfiguration configuration)
+        public AuthService(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IInitService initService, IConfiguration configuration, IEmailService emailService, ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _emailService = emailService;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<JwtModel> LoginAsync(LoginModel model)
         {
-
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser == null) throw new UnauthorizedAccessException("Invalid email or password");
+            if (existingUser == null) 
+                throw new UnauthorizedAccessException("Invalid email or password");
 
             var isCorrect = await _userManager.CheckPasswordAsync(existingUser, model.Password);
-            if (!isCorrect) throw new UnauthorizedAccessException("Invalid email or password");
 
-            if (existingUser.IsDeleted == true) throw new UnauthorizedAccessException("You have been banned");
+            if (!isCorrect) 
+                throw new UnauthorizedAccessException("Invalid email or password");
+
+            if (!existingUser.EmailConfirmed)
+                throw new UnauthorizedAccessException("Email is not confirmed. Please verify your email before logging in.");
+
+            if (existingUser.IsDeleted == true)
+                throw new UnauthorizedAccessException("You have been banned");
 
             var accessToken = await CreateAccessToken(existingUser);
             var refreshToken = await CreateRefreshToken(existingUser);
@@ -49,7 +61,7 @@ namespace Service.Services
             };
         }
 
-        public async Task<IdentityResult> RegisterWorkerAsync(User user, int type)
+        public async Task<IdentityResult> RegisterWorkerAsync(CancellationToken cancellationToken, User user)
         {
 
             var result = await _userManager.CreateAsync(user, user.PasswordHash);
@@ -61,10 +73,33 @@ namespace Service.Services
 
             await AssignRoleAsync(user, RolesHelper.Worker);
 
+            // Gửi OTP xác thực email
+            var otp = await _userManager.GenerateUserTokenAsync(user, "SixDigitOTP", "EmailConfirmation");
+
+
+            var subject = "worker Email Verification OTP";
+            var body = $"Your OTP code for worker is: <b>{otp}</b>. This code is valid for 1 minute.";
+
+            try
+            {
+                await _emailService.SendMailAsync(cancellationToken, new EmailModel
+                {
+                    To = user.Email,
+                    Subject = subject,
+                    Body = body
+                });
+                _logger.LogInformation("Sent OTP to {Email} (worker) at {Time}", user.Email, DateTime.UtcNow);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send OTP email to {Email} (worker)", user.Email);
+                throw new Exception("Failed to send OTP email. Please try again later.");
+            }
+
             return result;
         }
 
-        public async Task<IdentityResult> RegisterEmployerAsync(User user, int type)
+        public async Task<IdentityResult> RegisterEmployerAsync(CancellationToken cancellationToken, User user)
         {
 
             var result = await _userManager.CreateAsync(user, user.PasswordHash);
@@ -76,8 +111,32 @@ namespace Service.Services
 
             await AssignRoleAsync(user, RolesHelper.Employer);
 
+            // Gửi OTP xác thực email
+            var otp = await _userManager.GenerateUserTokenAsync(user, "SixDigitOTP", "EmailConfirmation");
+
+
+            var subject = "employer Email Verification OTP";
+            var body = $"Your OTP code for employer is: <b>{otp}</b>. This code is valid for 1 minute.";
+
+            try
+            {
+                await _emailService.SendMailAsync(cancellationToken, new EmailModel
+                {
+                    To = user.Email,
+                    Subject = subject,
+                    Body = body
+                });
+                _logger.LogInformation("Sent OTP to {Email} (employer) at {Time}", user.Email, DateTime.UtcNow);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send OTP email to {Email} (employer)", user.Email);
+                throw new Exception("Failed to send OTP email. Please try again later.");
+            }
+
             return result;
         }
+
         public async Task LogoutAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
@@ -88,6 +147,61 @@ namespace Service.Services
             await _userManager.RemoveAuthenticationTokenAsync(user, "REFRESHTOKENPROVIDER", "RefreshToken");
         }
 
+        public async Task<bool> ResendEmailOtpAsync(string email, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null || user.EmailConfirmed)
+                return false;
+
+            var otp = await _userManager.GenerateUserTokenAsync(user, "SixDigitOTP", "EmailConfirmation");
+            var subject = "Resend Email Verification OTP";
+            var body = $"Your new OTP code is: <b>{otp}</b>. This code is valid for 1 minute.";
+            try
+            {
+                await _emailService.SendMailAsync(cancellationToken, new EmailModel
+                {
+                    To = user.Email,
+                    Subject = subject,
+                    Body = body
+                });
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> VerifyEmailOtpAsync(string email, string otp)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                _logger.LogWarning("OTP verification failed: user {Email} not found", email);
+                return false;
+            }
+
+            if (user.EmailConfirmed)
+            {
+                _logger.LogInformation("OTP verification: user {Email} already confirmed", email);
+                return true; // hoặc return false nếu muốn báo lỗi đã xác thực
+            }
+
+            var isValid = await _userManager.VerifyUserTokenAsync(
+                user, "SixDigitOTP", "EmailConfirmation", otp);
+
+            if (!isValid)
+            {
+                _logger.LogWarning("OTP verification failed for {Email} at {Time}", email, DateTime.UtcNow);
+                return false;
+            }
+
+            user.EmailConfirmed = true;
+            await _userManager.UpdateAsync(user);
+
+            _logger.LogInformation("OTP verified and email confirmed for {Email} at {Time}", email, DateTime.UtcNow);
+            return true;
+        }
 
         //create access token for user
         public async Task<string> CreateAccessToken(User user)
@@ -158,6 +272,7 @@ namespace Service.Services
             return token;
         }
 
+        //validate refresh token and return new access token and refresh token
         public async Task<JwtModel> ValidateRefreshToken(RefreshJwtModel model)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
