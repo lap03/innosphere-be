@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using innosphere_be.Models.Requests.AuthRequest;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Repository.Entities;
-using Service.Models.AuthModels;
 using Service.Interfaces;
-using innosphere_be.Models.Requests.AuthRequest;
+using Service.Models.AuthModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -25,6 +25,17 @@ namespace innosphere_be.Controllers
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             var result = await _authService.LoginAsync(model);
+            return Ok(result);
+        }
+
+        [HttpPost("login-google")]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginGoogle([FromBody] GoogleLoginRequest model)
+        {
+            var result = await _authService.LoginWithGoogleAsync(model.IdToken, model.Type, model.PhoneNumber);
+            if (result == null)
+                return Unauthorized(new { message = "Google login failed" });
+
             return Ok(result);
         }
 
@@ -97,6 +108,17 @@ namespace innosphere_be.Controllers
             return Ok(new { message = "Logout successful" });
         }
 
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] string email, CancellationToken cancellationToken)
+        {
+            var result = await _authService.SendForgotPasswordOtpAsync(email, cancellationToken);
+            if (!result)
+                return BadRequest(new { message = "Email not found or not confirmed." });
+
+            return Ok(new { message = "OTP has been sent to your email. Please check your inbox." });
+        }
+
 
         [HttpPost("resend-email-otp")]
         [AllowAnonymous]
@@ -118,6 +140,17 @@ namespace innosphere_be.Controllers
                 return BadRequest(new { message = "Invalid or expired OTP" });
 
             return Ok(new { message = "Email verified successfully" });
+        }
+
+        [HttpPost("reset-password-by-otp")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPasswordByOtp([FromBody] ResetPasswordByOtpRequest model)
+        {
+            var result = await _authService.VerifyForgotPasswordOtpAndResetAsync(model.Email, model.Otp, model.NewPassword);
+            if (!result)
+                return BadRequest(new { message = "Invalid OTP or failed to reset password." });
+
+            return Ok(new { message = "Password has been reset successfully." });
         }
     }
 }
