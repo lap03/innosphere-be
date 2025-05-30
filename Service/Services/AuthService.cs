@@ -10,6 +10,7 @@ using Service.Models.EmailModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Google.Apis.Auth;
 
 namespace Service.Services
 {
@@ -33,12 +34,12 @@ namespace Service.Services
         public async Task<JwtModel> LoginAsync(LoginModel model)
         {
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser == null) 
+            if (existingUser == null)
                 throw new UnauthorizedAccessException("Invalid email or password");
 
             var isCorrect = await _userManager.CheckPasswordAsync(existingUser, model.Password);
 
-            if (!isCorrect) 
+            if (!isCorrect)
                 throw new UnauthorizedAccessException("Invalid email or password");
 
             if (!existingUser.EmailConfirmed)
@@ -58,6 +59,63 @@ namespace Service.Services
                 Email = existingUser.Email,
                 FullName = existingUser.FullName,
                 AvatarUrl = existingUser.AvatarUrl
+            };
+        }
+
+        public async Task<JwtModel> LoginWithGoogleAsync(string idToken, string type, string? phoneNumber)
+        {
+            // Validate Google token
+            var payload = await GoogleJsonWebSignature.ValidateAsync(idToken);
+
+            // Map type to role
+            string role = type?.Trim().ToLower() switch
+            {
+                "worker" => "Worker",
+                "employer" => "Employer",
+                _ => throw new ArgumentException("Invalid user type")
+            };
+
+            // Find or create user
+            var user = await _userManager.FindByEmailAsync(payload.Email);
+            if (user == null)
+            {
+                user = new User
+                {
+                    UserName = payload.Email,
+                    Email = payload.Email,
+                    FullName = payload.Name,
+                    EmailConfirmed = true,
+                    PhoneNumber = phoneNumber
+                };
+                var result = await _userManager.CreateAsync(user);
+                if (!result.Succeeded)
+                    return null;
+            }
+            else if (!string.IsNullOrEmpty(phoneNumber) && user.PhoneNumber != phoneNumber)
+            {
+                user.PhoneNumber = phoneNumber;
+                await _userManager.UpdateAsync(user);
+            }
+
+            // Gán role nếu chưa có
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains(role, StringComparer.OrdinalIgnoreCase))
+            {
+                await _userManager.AddToRoleAsync(user, role);
+            }
+
+            // Tạo JWT và refresh token
+            var accessToken = await CreateAccessToken(user);
+            var refreshToken = await CreateRefreshToken(user);
+
+            return new JwtModel
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                UserID = user.Id,
+                Email = user.Email,
+                FullName = user.FullName,
+                AvatarUrl = user.AvatarUrl
             };
         }
 
@@ -147,6 +205,33 @@ namespace Service.Services
             await _userManager.RemoveAuthenticationTokenAsync(user, "REFRESHTOKENPROVIDER", "RefreshToken");
         }
 
+        public async Task<bool> SendForgotPasswordOtpAsync(string email, CancellationToken cancellationToken)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null || user.EmailConfirmed)
+                return false;
+
+            var otp = await _userManager.GenerateUserTokenAsync(user, "SixDigitOTP", "ForgotPassword");
+            var subject = "Forgot Password OTP";
+            var body = $"Your OTP code for password reset is: <b>{otp}</b>. This code is valid for 1 minute.";
+
+            try
+            {
+                await _emailService.SendMailAsync(cancellationToken, new EmailModel
+                {
+                    To = user.Email,
+                    Subject = subject,
+                    Body = body
+                });
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public async Task<bool> ResendEmailOtpAsync(string email, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByEmailAsync(email);
@@ -201,6 +286,21 @@ namespace Service.Services
 
             _logger.LogInformation("OTP verified and email confirmed for {Email} at {Time}", email, DateTime.UtcNow);
             return true;
+        }
+
+        public async Task<bool> VerifyForgotPasswordOtpAndResetAsync(string email, string otp, string newPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null || !user.EmailConfirmed)
+                return false;
+
+            var isValid = await _userManager.VerifyUserTokenAsync(user, "SixDigitOTP", "ForgotPassword", otp);
+            if (!isValid)
+                return false;
+
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+            return result.Succeeded;
         }
 
         //create access token for user
