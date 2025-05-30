@@ -1,0 +1,39 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Service.Models.AdvertisementPackageModels
+{
+    public class CreateAdvertisementPackageModel
+    {
+        [Required(ErrorMessage = "Package name is required.")]
+        [StringLength(100, ErrorMessage = "Package name cannot exceed 100 characters.")]
+        public string PackageName { get; set; }
+
+        public string Description { get; set; }
+
+        [Required(ErrorMessage = "Price is required.")]
+        [Range(0, double.MaxValue, ErrorMessage = "Price must be positive.")]
+        public float Price { get; set; }
+
+        [Required(ErrorMessage = "Duration (in days) is required.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Duration must be at least 1 day.")]
+        public int DurationDays { get; set; }
+
+        [Range(0, int.MaxValue, ErrorMessage = "Max impressions must be positive.")]
+        public int? MaxImpressions { get; set; }
+
+        [Required(ErrorMessage = "Ad position is required.")]
+        [StringLength(50)]
+        [RegularExpression("^(Top|Sidebar|Footer)$", ErrorMessage = "Position must be Top, Sidebar, or Footer.")]
+        public string AdPosition { get; set; }
+
+        [StringLength(100, ErrorMessage = "Allowed ad types cannot exceed 100 characters.")]
+        public string AllowedAdTypes { get; set; } = "ALL";
+
+        public bool IsActive { get; set; } = true;
+    }
+}
