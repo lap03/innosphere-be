@@ -1,4 +1,7 @@
 ﻿using AutoMapper;
+using innosphere_be.Models.responses.BusinessTypeResponses;
+using innosphere_be.Models.responses.EmployerResponses;
+using innosphere_be.Models.responses.WorkerResponses;
 using Repository.Entities;
 using Service.Models.AdvertisementPackageModels;
 using Service.Models.CityModels;
@@ -16,9 +19,15 @@ namespace innosphere_be.Mappings
         {
             // worker profile
             CreateMap<Worker, WorkerEditModel>().ReverseMap();
+            CreateMap<Worker, WorkerProfileResponse>().ReverseMap();
 
             // employer profile
             CreateMap<Employer, EmployerEditModel>().ReverseMap();
+            CreateMap<Employer, EmployerProfileResponse>()
+                .ForMember(dest => dest.BusinessType, opt => opt.MapFrom(src => src.BusinessType));
+
+            // BusinessType
+            CreateMap<BusinessType, BusinessTypeResponse>().ReverseMap();
 
             // City
             CreateMap<City, CityModel>().ReverseMap();
