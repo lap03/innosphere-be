@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Repository.Entities;
 using Repository.Interfaces;
 using Service.Interfaces;
@@ -15,22 +16,26 @@ namespace Service.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly UserManager<User> _userManager;
 
-        public EmployerService(IUnitOfWork unitOfWork, IMapper mapper)
+        public EmployerService(IUnitOfWork unitOfWork, IMapper mapper, UserManager<User> userManager)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _userManager = userManager;
         }
 
-        public async Task<Employer> GetProfileAsync(string userId)
+        public async Task<EmployerModel> GetProfileAsync(string userId)
         {
-            var employer = await _unitOfWork.GetRepository<Employer>().GetSingleByConditionAsynce(u => u.UserId == userId, t => t.BusinessType);
+            var employer = await _unitOfWork.GetRepository<Employer>()
+                .GetSingleByConditionAsynce(e => e.UserId == userId, e => e.User);
             if (employer == null)
                 throw new KeyNotFoundException("Employer profile not found.");
-            return employer;
+
+            return _mapper.Map<EmployerModel>(employer);
         }
 
-        public async Task<Employer> CreateProfileAsync(string userId, EmployerEditModel request)
+        public async Task<EmployerModel> CreateProfileAsync(string userId, EmployerEditModel request)
         {
             var repo = _unitOfWork.GetRepository<Employer>();
             if (await repo.GetSingleByConditionAsynce(e => e.UserId == userId) != null)
@@ -68,13 +73,13 @@ namespace Service.Services
             employer.CreatedAt = DateTime.UtcNow;
             await repo.AddAsync(employer);
             await _unitOfWork.SaveChangesAsync();
-            return employer;
+            return await GetProfileAsync(userId);
         }
 
-        public async Task<Employer> UpdateProfileAsync(string userId, EmployerEditModel request)
+        public async Task<EmployerModel> UpdateProfileAsync(string userId, EmployerEditModel request)
         {
             var repo = _unitOfWork.GetRepository<Employer>();
-            var employer = await repo.GetSingleByConditionAsynce(e => e.UserId == userId);
+            var employer = await repo.GetSingleByConditionAsynce(e => e.UserId == userId, e => e.User);
             if (employer == null)
                 throw new KeyNotFoundException("Employer profile not found.");
 
@@ -105,11 +110,21 @@ namespace Service.Services
             }
 
             _mapper.Map(request, employer);
+
+            if (employer.User != null)
+            {
+                _mapper.Map(request, employer.User);
+                employer.User.UpdatedAt = DateTime.UtcNow;
+                var result = await _userManager.UpdateAsync(employer.User);
+                if (!result.Succeeded)
+                    throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
+            }
+
             employer.BusinessTypeId = businessTypeId;
             employer.UpdatedAt = DateTime.UtcNow;
             await repo.Update(employer);
             await _unitOfWork.SaveChangesAsync();
-            return employer;
+            return await GetProfileAsync(userId);
         }
     }
 }

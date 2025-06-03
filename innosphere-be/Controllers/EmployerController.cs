@@ -1,5 +1,4 @@
 using AutoMapper;
-using innosphere_be.Models.responses.EmployerResponses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Repository.Helpers;
@@ -31,8 +30,7 @@ namespace innosphere_be.Controllers
                 return Unauthorized("User ID not found in claims.");
 
             var employer = await _employerService.GetProfileAsync(userId);
-            var response = _mapper.Map<EmployerProfileResponse>(employer);
-            return Ok(response);
+            return Ok(employer);
         }
 
         [HttpPost("profile")]
@@ -43,8 +41,7 @@ namespace innosphere_be.Controllers
                 return Unauthorized("User ID not found in claims.");
 
             var employer = await _employerService.CreateProfileAsync(userId, model);
-            var response = _mapper.Map<EmployerProfileResponse>(employer);
-            return Ok(response);
+            return Ok(employer);
         }
 
         [HttpPut("profile")]
@@ -55,8 +52,7 @@ namespace innosphere_be.Controllers
                 return Unauthorized("User ID not found in claims.");
 
             var employer = await _employerService.UpdateProfileAsync(userId, model);
-            var response = _mapper.Map<EmployerProfileResponse>(employer);
-            return Ok(response);
+            return Ok(employer);
         }
     }
 }

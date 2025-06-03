@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using innosphere_be.Models.responses.WorkerResponses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Repository.Helpers;
@@ -33,8 +32,7 @@ namespace innosphere_be.Controllers
             }
 
             var worker = await _workerService.GetProfileAsync(userId);
-            var response = _mapper.Map<WorkerProfileResponse>(worker);
-            return Ok(response);
+            return Ok(worker);
         }
 
         [HttpPost("profile")]
@@ -47,8 +45,7 @@ namespace innosphere_be.Controllers
             }
 
             var worker = await _workerService.CreateProfileAsync(userId, model);
-            var response = _mapper.Map<WorkerProfileResponse>(worker);
-            return Ok(response);
+            return Ok(worker);
         }
 
         [HttpPut("profile")]
@@ -61,8 +58,7 @@ namespace innosphere_be.Controllers
             }
 
             var worker = await _workerService.UpdateProfileAsync(userId, model);
-            var response = _mapper.Map<WorkerProfileResponse>(worker);
-            return Ok(response);
+            return Ok(worker);
         }
     }
 }

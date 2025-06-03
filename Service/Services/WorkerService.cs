@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Repository.Entities;
 using Repository.Interfaces;
@@ -16,22 +17,26 @@ namespace Service.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly UserManager<User> _userManager;
 
-        public WorkerService(IUnitOfWork unitOfWork, IMapper mapper)
+        public WorkerService(IUnitOfWork unitOfWork, IMapper mapper, UserManager<User> userManager)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _userManager = userManager;
         }
 
-        public async Task<Worker> GetProfileAsync(string userId)
+        public async Task<WorkerModel> GetProfileAsync(string userId)
         {
-            var worker = await _unitOfWork.GetRepository<Worker>().GetSingleByConditionAsynce(u => u.UserId == userId);
+            var worker = await _unitOfWork.GetRepository<Worker>()
+        .GetSingleByConditionAsynce(w => w.UserId == userId, w => w.User);
             if (worker == null)
                 throw new KeyNotFoundException("Worker profile not found.");
-            return worker;
+
+            return _mapper.Map<WorkerModel>(worker);
         }
 
-        public async Task<Worker> CreateProfileAsync(string userId, WorkerEditModel request)
+        public async Task<WorkerModel> CreateProfileAsync(string userId, WorkerEditModel request)
         {
             var repo = _unitOfWork.GetRepository<Worker>();
             if (await repo.GetSingleByConditionAsynce(w => w.UserId == userId) != null)
@@ -45,7 +50,7 @@ namespace Service.Services
                 worker.VerificationStatus = "PENDING";
                 await repo.AddAsync(worker);
                 await _unitOfWork.SaveChangesAsync();
-                return worker;
+                return await GetProfileAsync(userId);
             }
             catch (Exception)
             {
@@ -53,25 +58,32 @@ namespace Service.Services
             }
         }
 
-        public async Task<Worker> UpdateProfileAsync(string userId, WorkerEditModel request)
+        public async Task<WorkerModel> UpdateProfileAsync(string userId, WorkerEditModel model)
         {
-            var repo = _unitOfWork.GetRepository<Worker>();
-            var worker = await repo.GetSingleByConditionAsynce(w => w.UserId == userId);
-            if (worker == null)
-                throw new KeyNotFoundException("Worker profile not found.");
-            try
-            {
-                _mapper.Map(request, worker);
-                worker.UpdatedAt = DateTime.UtcNow; // Cập nhật thời gian sửa đổi
+            var workerRepo = _unitOfWork.GetRepository<Worker>();
 
-                await repo.Update(worker);
-                await _unitOfWork.SaveChangesAsync();
-                return worker;
-            }
-            catch (Exception)
+            // Lấy worker và user
+            var worker = await workerRepo.GetSingleByConditionAsynce(w => w.UserId == userId, w => w.User);
+            if (worker == null) throw new KeyNotFoundException("Worker profile not found.");
+
+            // Map các trường Worker
+            _mapper.Map(model, worker);
+
+            // Map các trường User (Identity)
+            if (worker.User != null)
             {
-                throw;
+                _mapper.Map(model, worker.User);
+                worker.User.UpdatedAt = DateTime.UtcNow;
+                var result = await _userManager.UpdateAsync(worker.User);
+                if (!result.Succeeded)
+                    throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
             }
+
+            worker.UpdatedAt = DateTime.UtcNow;
+            await workerRepo.Update(worker);
+            await _unitOfWork.SaveChangesAsync();
+
+            return await GetProfileAsync(userId);
         }
     }
 }

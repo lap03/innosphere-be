@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
 using innosphere_be.Models.responses.BusinessTypeResponses;
-using innosphere_be.Models.responses.EmployerResponses;
-using innosphere_be.Models.responses.WorkerResponses;
 using Repository.Entities;
 using Service.Models.AdvertisementPackageModels;
 using Service.Models.CityModels;
@@ -19,12 +17,48 @@ namespace innosphere_be.Mappings
         {
             // worker profile
             CreateMap<Worker, WorkerEditModel>().ReverseMap();
-            CreateMap<Worker, WorkerProfileResponse>().ReverseMap();
+            CreateMap<Worker, WorkerModel>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.User.FullName))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.User.AvatarUrl))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.User.Address))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
+                .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.Id))
+                .ReverseMap();
+            CreateMap<WorkerEditModel, Worker>()
+                .ForMember(dest => dest.Skills, opt => opt.Condition(src => src.Skills != null))
+                .ForMember(dest => dest.Bio, opt => opt.Condition(src => src.Bio != null))
+                .ForMember(dest => dest.Education, opt => opt.Condition(src => src.Education != null))
+                .ForMember(dest => dest.Experience, opt => opt.Condition(src => src.Experience != null))
+                .ReverseMap();
+
+            CreateMap<WorkerEditModel, User>()
+                .ForMember(dest => dest.FullName, opt => opt.Condition(src => src.FullName != null))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.Condition(src => src.AvatarUrl != null))
+                .ForMember(dest => dest.Address, opt => opt.Condition(src => src.Address != null))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber != null))
+                .ReverseMap();
 
             // employer profile
             CreateMap<Employer, EmployerEditModel>().ReverseMap();
-            CreateMap<Employer, EmployerProfileResponse>()
-                .ForMember(dest => dest.BusinessType, opt => opt.MapFrom(src => src.BusinessType));
+
+            CreateMap<Employer, EmployerModel>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.User.FullName))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.User.AvatarUrl))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.User.Address))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
+                .ForMember(dest => dest.EmployerId, opt => opt.MapFrom(src => src.Id))
+                .ReverseMap();
+
+            CreateMap<EmployerEditModel, User>()
+                .ForMember(dest => dest.FullName, opt => opt.Condition(src => src.FullName != null))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.Condition(src => src.AvatarUrl != null))
+                .ForMember(dest => dest.Address, opt => opt.Condition(src => src.Address != null))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber != null))
+                .ReverseMap();
 
             // BusinessType
             CreateMap<BusinessType, BusinessTypeResponse>().ReverseMap();
