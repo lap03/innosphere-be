@@ -59,6 +59,8 @@ namespace innosphere_be.Configurations
 
             services.AddScoped<IEmailService, EmailService>();
 
+            services.AddScoped<IWorkerService, WorkerService>();
+            services.AddScoped<IEmployerService, EmployerService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IInitService, InitService>();
             services.AddScoped<IAuthService, AuthService>();

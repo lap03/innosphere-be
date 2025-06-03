@@ -14,6 +14,7 @@ namespace Repository.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Worker> Workers { get; set; }
         public DbSet<Employer> Employers { get; set; }
+        public DbSet<BusinessType> BusinessTypes { get; set; }
         public DbSet<JobPosting> JobPostings { get; set; }
         public DbSet<JobApplication> JobApplications { get; set; }
         public DbSet<JobTag> JobTags { get; set; }
