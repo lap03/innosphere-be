@@ -59,6 +59,8 @@ namespace innosphere_be.Configurations
 
             services.AddScoped<IEmailService, EmailService>();
 
+            services.AddScoped<IWorkerService, WorkerService>();
+            services.AddScoped<IEmployerService, EmployerService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IInitService, InitService>();
             services.AddScoped<IAuthService, AuthService>();
@@ -84,6 +86,11 @@ namespace innosphere_be.Configurations
                         ValidAudience = configuration["JWT:Audience"],
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
                     };
+                })
+                .AddGoogle(options =>
+                {
+                    options.ClientId = configuration["Authentication:Google:ClientId"];
+                    options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
                 });
 
             services.AddAuthorization();

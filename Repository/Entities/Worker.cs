@@ -11,13 +11,13 @@ namespace Repository.Entities
         public string UserId { get; set; }
 
         [StringLength(255, ErrorMessage = "Skills cannot exceed 255 characters.")]
-        public string Skills { get; set; }
+        public string? Skills { get; set; }
 
         [StringLength(1000, ErrorMessage = "Bio cannot exceed 1000 characters.")]
-        public string Bio { get; set; }
+        public string? Bio { get; set; }
 
-        public string Education { get; set; }
-        public string Experience { get; set; }
+        public string? Education { get; set; }
+        public string? Experience { get; set; }
 
         [Range(0, 5, ErrorMessage = "Rating must be between 0 and 5.")]
         public float Rating { get; set; } = 0;

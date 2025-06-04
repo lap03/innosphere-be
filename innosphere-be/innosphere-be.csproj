@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="dotenv.net" Version="3.2.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
@@ -26,6 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Models\Requests\EmployerRequests\" />
+    <Folder Include="Models\Requests\NotificationRequests\" />
+    <Folder Include="Models\Requests\WorkerRequests\" />
     <Folder Include="Models\responses\AuthResponse\" />
   </ItemGroup>
 

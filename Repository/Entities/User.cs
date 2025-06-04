@@ -12,10 +12,10 @@ namespace Repository.Entities
         public string FullName { get; set; }
 
         [StringLength(512, ErrorMessage = "Avatar URL cannot exceed 512 characters.")]
-        public string AvatarUrl { get; set; }
+        public string? AvatarUrl { get; set; }
 
         [StringLength(255, ErrorMessage = "Address cannot exceed 255 characters.")]
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
         public bool IsDeleted { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(7);
