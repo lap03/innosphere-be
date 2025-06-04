@@ -3,8 +3,11 @@ using Repository.Entities;
 using Service.Models.AdvertisementPackageModels;
 using Service.Models.CityModels;
 using Service.Models.JobTagModels;
+using Service.Models.NotificationModels;
 using Service.Models.PaymentModels;
+using Service.Models.PaymentTypeModels;
 using Service.Models.SubscriptionPackageModels;
+using Service.Models.SocialLinkModels;
 
 namespace innosphere_be.Mappings
 {
@@ -18,7 +21,7 @@ namespace innosphere_be.Mappings
             CreateMap<City, UpdateCityModel>().ReverseMap();
 
             // JobTag
-            CreateMap<JobTag, JobTagModel>().ReverseMap().ReverseMap();
+            CreateMap<JobTag, JobTagModel>().ReverseMap();
             CreateMap<JobTag, CreateJobTagModel>().ReverseMap();
             CreateMap<JobTag, UpdateJobTagModel>().ReverseMap();
 
@@ -26,6 +29,11 @@ namespace innosphere_be.Mappings
             CreateMap<Payment, PaymentModel>().ReverseMap();
             CreateMap<Payment, CreatePaymentModel>().ReverseMap();
             CreateMap<Payment, UpdatePaymentModel>().ReverseMap();
+
+            // PaymentType
+            CreateMap<PaymentType, PaymentTypeModel>().ReverseMap();
+            CreateMap<PaymentType, CreatePaymentTypeModel>().ReverseMap();
+            CreateMap<PaymentType, UpdatePaymentTypeModel>().ReverseMap();
 
             // SubscriptionPackage
             CreateMap<SubscriptionPackage, SubscriptionPackageModel>().ReverseMap();
@@ -36,6 +44,16 @@ namespace innosphere_be.Mappings
             CreateMap<AdvertisementPackage, AdvertisementPackageModel>().ReverseMap();
             CreateMap<AdvertisementPackage, CreateAdvertisementPackageModel>().ReverseMap();
             CreateMap<AdvertisementPackage, UpdateAdvertisementPackageModel>().ReverseMap();
+
+            // Notification
+            CreateMap<Notification, NotificationModel>().ReverseMap();
+            CreateMap<Notification, CreateNotificationModel>().ReverseMap();
+            CreateMap<Notification, UpdateNotificationModel>().ReverseMap();
+
+            // SocialLink
+            CreateMap<SocialLink, SocialLinkModel>().ReverseMap();
+            CreateMap<SocialLink, CreateSocialLinkModel>().ReverseMap();
+            CreateMap<SocialLink, UpdateSocialLinkModel>().ReverseMap();
         }
     }
 }

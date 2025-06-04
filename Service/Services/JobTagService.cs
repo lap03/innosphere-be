@@ -6,7 +6,6 @@ using Service.Models.JobTagModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Service.Services
@@ -14,83 +13,122 @@ namespace Service.Services
     public class JobTagService : IJobTagService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IGenericRepo<JobTag> _jobTagRepo;
         private readonly IMapper _mapper;
 
         public JobTagService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _jobTagRepo = _unitOfWork.GetRepository<JobTag>();
             _mapper = mapper;
         }
 
         public async Task<List<JobTagModel>> GetAllAsync()
         {
-            var tags = await _unitOfWork.GetRepository<JobTag>().GetAllAsync();
-            return _mapper.Map<List<JobTagModel>>(tags);
+            var list = await _jobTagRepo.GetAllAsync();
+            return _mapper.Map<List<JobTagModel>>(list);
+        }
+
+        public async Task<List<JobTagModel>> GetAllActiveAsync()
+        {
+            var list = await _jobTagRepo.GetAllAsync(jt => !jt.IsDeleted);
+            return _mapper.Map<List<JobTagModel>>(list);
         }
 
         public async Task<JobTagModel> GetByIdAsync(int id)
         {
-            var tag = await _unitOfWork.GetRepository<JobTag>().GetByIdAsync(id);
-            if (tag == null)
-                throw new KeyNotFoundException("Job tag not found."); // Middleware sẽ bắt lỗi 404
-
-            return _mapper.Map<JobTagModel>(tag);
+            var entity = await _jobTagRepo.GetByIdAsync(id);
+            if (entity == null) throw new KeyNotFoundException("Job tag not found.");
+            return _mapper.Map<JobTagModel>(entity);
         }
 
         public async Task<JobTagModel> CreateAsync(CreateJobTagModel dto)
         {
             try
             {
-                var tag = _mapper.Map<JobTag>(dto);
-                await _unitOfWork.GetRepository<JobTag>().AddAsync(tag);
+                var entity = _mapper.Map<JobTag>(dto);
+                await _jobTagRepo.AddAsync(entity);
                 await _unitOfWork.SaveChangesAsync();
-                return _mapper.Map<JobTagModel>(tag);
+                return _mapper.Map<JobTagModel>(entity);
             }
             catch (Exception ex)
             {
-                // Nếu có lỗi khi thêm, middleware sẽ xử lý lỗi này
                 throw new Exception($"Failed to create job tag: {ex.Message}");
             }
         }
 
         public async Task<JobTagModel> UpdateAsync(int id, UpdateJobTagModel dto)
         {
-            var tagRepo = _unitOfWork.GetRepository<JobTag>();
-            var tag = await tagRepo.GetByIdAsync(id);
-            if (tag == null)
-                throw new KeyNotFoundException("Job tag not found."); // Middleware xử lý lỗi không tìm thấy
+            var entity = await _jobTagRepo.GetByIdAsync(id);
+            if (entity == null) throw new KeyNotFoundException("Job tag not found.");
 
             try
             {
-                _mapper.Map(dto, tag);
-                await tagRepo.Update(tag);
+                _mapper.Map(dto, entity);
+                await _jobTagRepo.Update(entity);
                 await _unitOfWork.SaveChangesAsync();
-                return _mapper.Map<JobTagModel>(tag);
+                return _mapper.Map<JobTagModel>(entity);
             }
             catch (Exception ex)
             {
-                // Middleware sẽ bắt lỗi cập nhật thất bại
                 throw new Exception($"Failed to update job tag: {ex.Message}");
             }
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var tagRepo = _unitOfWork.GetRepository<JobTag>();
-            var tag = await tagRepo.GetByIdAsync(id);
-            if (tag == null)
-                throw new KeyNotFoundException("Job tag not found."); // Middleware bắt lỗi 404
+            var entity = await _jobTagRepo.GetByIdAsync(id);
+            if (entity == null) throw new KeyNotFoundException("Job tag not found.");
 
             try
             {
-                await tagRepo.SoftDelete(tag);
+                await _jobTagRepo.SoftDelete(entity);
                 await _unitOfWork.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
             {
-                // Middleware xử lý lỗi nếu soft delete thất bại
-                throw new Exception($"Failed to delete job tag: {ex.Message}");
+                throw new Exception($"Failed to soft delete job tag: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> RestoreAsync(int id)
+        {
+            var entity = await _jobTagRepo.GetByIdAsync(id);
+            if (entity == null) throw new KeyNotFoundException("Job tag not found.");
+
+            try
+            {
+                entity.IsDeleted = false;
+                await _jobTagRepo.Update(entity);
+                await _unitOfWork.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to restore job tag: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> HardDeleteAsync(int id)
+        {
+            // Lấy entity kèm JobPostingTags (FK)
+            var entity = await _jobTagRepo.GetByIdAsync(id, jt => jt.JobPostingTags);
+            if (entity == null) throw new KeyNotFoundException("Job tag not found.");
+
+            // Kiểm tra có bản ghi con chưa xóa mềm không
+            if (entity.JobPostingTags != null && entity.JobPostingTags.Any(jpt => !jpt.IsDeleted))
+                throw new InvalidOperationException("Cannot hard delete job tag because it has related active job posting tags.");
+
+            try
+            {
+                await _jobTagRepo.HardDelete(jt => jt.Id == id);
+                await _unitOfWork.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to hard delete job tag: {ex.Message}");
             }
         }
     }
