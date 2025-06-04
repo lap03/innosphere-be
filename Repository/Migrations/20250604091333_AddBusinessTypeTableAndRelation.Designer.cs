@@ -12,7 +12,7 @@ using Repository.Data;
 namespace Repository.Migrations
 {
     [DbContext(typeof(InnoSphereDBContext))]
-    [Migration("20250531100257_AddBusinessTypeTableAndRelation")]
+    [Migration("20250604091333_AddBusinessTypeTableAndRelation")]
     partial class AddBusinessTypeTableAndRelation
     {
         /// <inheritdoc />
@@ -1152,12 +1152,10 @@ namespace Repository.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("AvatarUrl")
-                        .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 

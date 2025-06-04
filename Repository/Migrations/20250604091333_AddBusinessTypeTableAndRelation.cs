@@ -52,6 +52,26 @@ namespace Repository.Migrations
                 oldMaxLength: 1000);
 
             migrationBuilder.AlterColumn<string>(
+                name: "AvatarUrl",
+                table: "Users",
+                type: "nvarchar(512)",
+                maxLength: 512,
+                nullable: true,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(512)",
+                oldMaxLength: 512);
+
+            migrationBuilder.AlterColumn<string>(
+                name: "Address",
+                table: "Users",
+                type: "nvarchar(255)",
+                maxLength: 255,
+                nullable: true,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(255)",
+                oldMaxLength: 255);
+
+            migrationBuilder.AlterColumn<string>(
                 name: "CompanyDescription",
                 table: "Employers",
                 type: "nvarchar(max)",
@@ -168,6 +188,30 @@ namespace Repository.Migrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(1000)",
                 oldMaxLength: 1000,
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<string>(
+                name: "AvatarUrl",
+                table: "Users",
+                type: "nvarchar(512)",
+                maxLength: 512,
+                nullable: false,
+                defaultValue: "",
+                oldClrType: typeof(string),
+                oldType: "nvarchar(512)",
+                oldMaxLength: 512,
+                oldNullable: true);
+
+            migrationBuilder.AlterColumn<string>(
+                name: "Address",
+                table: "Users",
+                type: "nvarchar(255)",
+                maxLength: 255,
+                nullable: false,
+                defaultValue: "",
+                oldClrType: typeof(string),
+                oldType: "nvarchar(255)",
+                oldMaxLength: 255,
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(

@@ -19,15 +19,6 @@ namespace Service.Services
         // Seed 3 user mặc định
         public async Task<IdentityResult> SeedUsersAsync()
         {
-            // Kiểm tra nếu đã có bất kỳ user seed nào thì báo lỗi
-            var adminExists = await _userManager.FindByEmailAsync("admin@example.com") != null;
-            var employerExists = await _userManager.FindByEmailAsync("employer@example.com") != null;
-            var workerExists = await _userManager.FindByEmailAsync("worker@example.com") != null;
-
-            if (adminExists || employerExists || workerExists)
-            {
-                return IdentityResult.Failed(new IdentityError { Description = "Seed users already exist. Seeding can only be performed once." });
-            }
 
             // Nếu chưa có thì seed
             await CreateUserWithRoleAsync("admin@example.com", "1", RolesHelper.Admin);
@@ -46,6 +37,7 @@ namespace Service.Services
 
             user = new User
             {
+                FullName = email.Split('@')[0], // Lấy phần trước @ làm tên hiển thị
                 UserName = email,
                 Email = email,
                 EmailConfirmed = true
