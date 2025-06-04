@@ -1,4 +1,5 @@
 
+using dotenv.net;
 using innosphere_be.Configurations;
 using innosphere_be.Mappings;
 using innosphere_be.MiddleWares;
@@ -12,6 +13,10 @@ namespace innosphere_be
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            if (File.Exists(".env"))
+            {
+                DotEnv.Load(new DotEnvOptions(envFilePaths: new[] { ".env" }));
+            }
 
             //set up routing
             builder.Services.AddRouting(options => options.LowercaseUrls = true);
