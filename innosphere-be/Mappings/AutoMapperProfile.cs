@@ -5,7 +5,9 @@ using Service.Models.AdvertisementPackageModels;
 using Service.Models.CityModels;
 using Service.Models.EmployerModels;
 using Service.Models.JobTagModels;
+using Service.Models.NotificationModels;
 using Service.Models.PaymentModels;
+using Service.Models.SocialLinkModels;
 using Service.Models.SubscriptionPackageModels;
 using Service.Models.WorkerModels;
 
@@ -87,6 +89,16 @@ namespace innosphere_be.Mappings
             CreateMap<AdvertisementPackage, AdvertisementPackageModel>().ReverseMap();
             CreateMap<AdvertisementPackage, CreateAdvertisementPackageModel>().ReverseMap();
             CreateMap<AdvertisementPackage, UpdateAdvertisementPackageModel>().ReverseMap();
+
+            // Notification
+            CreateMap<Notification, NotificationModel>().ReverseMap();
+            CreateMap<Notification, CreateNotificationModel>().ReverseMap();
+            CreateMap<Notification, UpdateNotificationModel>().ReverseMap();
+
+            // SocialLink
+            CreateMap<SocialLink, SocialLinkModel>().ReverseMap();
+            CreateMap<SocialLink, CreateSocialLinkModel>().ReverseMap();
+            CreateMap<SocialLink, UpdateSocialLinkModel>().ReverseMap();
         }
     }
 }
