@@ -7,6 +7,7 @@ namespace Repository.Interfaces
     {
         Task<TEntity> AddAsync(TEntity entity);
         Task AddRangeAsync(List<TEntity> entities);
+        Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate = null);
         Task CommitAsync();
         Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> predicate = null, params Expression<Func<TEntity, object>>[] includes);
         Task<(IEnumerable<TEntity> Items, int TotalCount)> GetAllByConditionAsync(Expression<Func<TEntity, bool>> predicate = null, int pageNumber = 1, int pageSize = int.MaxValue, params Expression<Func<TEntity, object>>[] includes);

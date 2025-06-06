@@ -4,6 +4,7 @@ using Repository.Entities;
 using Service.Models.AdvertisementPackageModels;
 using Service.Models.CityModels;
 using Service.Models.EmployerModels;
+using Service.Models.JobPostings;
 using Service.Models.JobTagModels;
 using Service.Models.NotificationModels;
 using Service.Models.PaymentModels;
@@ -71,7 +72,7 @@ namespace innosphere_be.Mappings
             CreateMap<City, UpdateCityModel>().ReverseMap();
 
             // JobTag
-            CreateMap<JobTag, JobTagModel>().ReverseMap().ReverseMap();
+            CreateMap<JobTag, JobTagModel>().ReverseMap();
             CreateMap<JobTag, CreateJobTagModel>().ReverseMap();
             CreateMap<JobTag, UpdateJobTagModel>().ReverseMap();
 
@@ -99,6 +100,12 @@ namespace innosphere_be.Mappings
             CreateMap<SocialLink, SocialLinkModel>().ReverseMap();
             CreateMap<SocialLink, CreateSocialLinkModel>().ReverseMap();
             CreateMap<SocialLink, UpdateSocialLinkModel>().ReverseMap();
+
+            // JobPosting
+            CreateMap<CreateJobPostingModel, JobPosting>().ReverseMap();
+            CreateMap<JobPosting, JobPostingModel>()
+                .ForMember(dest => dest.JobTags, opt => opt.MapFrom(src => src.JobPostingTags.Select(jpt => jpt.JobTag)))
+                .ReverseMap();
         }
     }
 }
