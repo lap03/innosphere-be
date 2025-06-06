@@ -37,7 +37,6 @@ namespace Repository.Entities
         public virtual ICollection<JobPosting> JobPostings { get; set; }
         public virtual ICollection<Subscription> Subscriptions { get; set; }
         public virtual ICollection<Advertisement> Advertisements { get; set; }
-        public virtual ICollection<Payment> Payments { get; set; }
         public virtual ICollection<EmployerRating> EmployerRatings { get; set; }
     }
 }

@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
 using innosphere_be.Models.responses.BusinessTypeResponses;
 using Repository.Entities;
+using Service.Models.AdvertisementModels;
 using Service.Models.AdvertisementPackageModels;
 using Service.Models.CityModels;
 using Service.Models.EmployerModels;
 using Service.Models.JobTagModels;
 using Service.Models.NotificationModels;
-using Service.Models.PaymentModels;
 using Service.Models.SocialLinkModels;
+using Service.Models.SubscriptionModels;
 using Service.Models.SubscriptionPackageModels;
 using Service.Models.WorkerModels;
 
@@ -75,11 +76,6 @@ namespace innosphere_be.Mappings
             CreateMap<JobTag, CreateJobTagModel>().ReverseMap();
             CreateMap<JobTag, UpdateJobTagModel>().ReverseMap();
 
-            // Payment
-            CreateMap<Payment, PaymentModel>().ReverseMap();
-            CreateMap<Payment, CreatePaymentModel>().ReverseMap();
-            CreateMap<Payment, UpdatePaymentModel>().ReverseMap();
-
             // SubscriptionPackage
             CreateMap<SubscriptionPackage, SubscriptionPackageModel>().ReverseMap();
             CreateMap<SubscriptionPackage, CreateSubscriptionPackageModel>().ReverseMap();
@@ -99,6 +95,16 @@ namespace innosphere_be.Mappings
             CreateMap<SocialLink, SocialLinkModel>().ReverseMap();
             CreateMap<SocialLink, CreateSocialLinkModel>().ReverseMap();
             CreateMap<SocialLink, UpdateSocialLinkModel>().ReverseMap();
+
+            // Advertisement
+            CreateMap<Advertisement, AdvertisementModel>().ReverseMap();
+            CreateMap<Advertisement, CreateAdvertisementModel>().ReverseMap();
+            CreateMap<Advertisement, UpdateAdvertisementModel>().ReverseMap();
+
+            //Subscription
+            CreateMap<Subscription, SubscriptionModel>().ReverseMap();
+            CreateMap<Subscription, CreateSubscriptionModel>().ReverseMap();
+            CreateMap<Subscription, UpdateSubscriptionModel>().ReverseMap();
         }
     }
 }

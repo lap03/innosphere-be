@@ -9,7 +9,7 @@ namespace Repository.Entities
         [StringLength(100, ErrorMessage = "Package name cannot exceed 100 characters.")]
         public string PackageName { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Required(ErrorMessage = "Price is required.")]
         [Range(0, double.MaxValue, ErrorMessage = "Price must be positive.")]
@@ -33,7 +33,7 @@ namespace Repository.Entities
         public int? ProfileStorageDays { get; set; }
 
         public bool AllowBrandPromotion { get; set; } = false;
-        public bool IsActive { get; set; } = true;//có thể xóa 
+        public bool? IsActive { get; set; } = true;//có thể xóa 
 
         public virtual ICollection<Subscription> Subscriptions { get; set; }
     }
