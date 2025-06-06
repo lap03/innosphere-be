@@ -64,6 +64,9 @@ namespace innosphere_be.Configurations
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IInitService, InitService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IJobPostingService, JobPostingService>();
+            services.AddScoped<IJobTagService, JobTagService>();
+
         }
 
         public static void SetupJWT(this IServiceCollection services, IConfiguration configuration)
