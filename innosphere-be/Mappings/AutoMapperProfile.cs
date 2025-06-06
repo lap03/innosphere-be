@@ -5,6 +5,7 @@ using Service.Models.AdvertisementModels;
 using Service.Models.AdvertisementPackageModels;
 using Service.Models.CityModels;
 using Service.Models.EmployerModels;
+using Service.Models.JobPostings;
 using Service.Models.JobTagModels;
 using Service.Models.NotificationModels;
 using Service.Models.SocialLinkModels;
@@ -72,7 +73,7 @@ namespace innosphere_be.Mappings
             CreateMap<City, UpdateCityModel>().ReverseMap();
 
             // JobTag
-            CreateMap<JobTag, JobTagModel>().ReverseMap().ReverseMap();
+            CreateMap<JobTag, JobTagModel>().ReverseMap();
             CreateMap<JobTag, CreateJobTagModel>().ReverseMap();
             CreateMap<JobTag, UpdateJobTagModel>().ReverseMap();
 

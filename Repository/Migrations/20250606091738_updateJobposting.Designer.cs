@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repository.Data;
 
@@ -11,9 +12,11 @@ using Repository.Data;
 namespace Repository.Migrations
 {
     [DbContext(typeof(InnoSphereDBContext))]
-    partial class InnoSphereDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250606091738_updateJobposting")]
+    partial class updateJobposting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -237,10 +240,6 @@ namespace Repository.Migrations
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("TransactionId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -278,12 +277,13 @@ namespace Repository.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("DurationDays")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("IsActive")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
@@ -791,6 +791,74 @@ namespace Repository.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("Repository.Entities.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AdvertisementId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.Property<float>("Amount")
+                        .HasColumnType("real");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployerId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentDetails")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("PaymentTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SubscriptionId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdvertisementId")
+                        .IsUnique();
+
+                    b.HasIndex("EmployerId");
+
+                    b.HasIndex("PaymentTypeId");
+
+                    b.HasIndex("SubscriptionId");
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("Repository.Entities.PaymentType", b =>
                 {
                     b.Property<int>("Id")
@@ -961,6 +1029,58 @@ namespace Repository.Migrations
                     b.ToTable("SocialLinks");
                 });
 
+            modelBuilder.Entity("Repository.Entities.Subscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<float>("AmountPaid")
+                        .HasColumnType("real");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SubscriptionPackageId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployerId");
+
+                    b.HasIndex("SubscriptionPackageId");
+
+                    b.ToTable("Subscriptions");
+                });
+
             modelBuilder.Entity("Repository.Entities.SubscriptionPackage", b =>
                 {
                     b.Property<int>("Id")
@@ -985,12 +1105,13 @@ namespace Repository.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("DurationDays")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("IsActive")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
@@ -1257,62 +1378,6 @@ namespace Repository.Migrations
                     b.ToTable("WorkerRatingCriterias");
                 });
 
-            modelBuilder.Entity("Subscription", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("AmountPaid")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmployerId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PaymentStatus")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("SubscriptionPackageId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TransactionId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployerId");
-
-                    b.HasIndex("SubscriptionPackageId");
-
-                    b.ToTable("Subscriptions");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -1489,7 +1554,7 @@ namespace Repository.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Subscription", null)
+                    b.HasOne("Repository.Entities.Subscription", null)
                         .WithMany("JobPostings")
                         .HasForeignKey("SubscriptionId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1530,6 +1595,41 @@ namespace Repository.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Repository.Entities.Payment", b =>
+                {
+                    b.HasOne("Repository.Entities.Advertisement", "Advertisement")
+                        .WithOne()
+                        .HasForeignKey("Repository.Entities.Payment", "AdvertisementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Repository.Entities.Employer", "Employer")
+                        .WithMany("Payments")
+                        .HasForeignKey("EmployerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Repository.Entities.PaymentType", "PaymentType")
+                        .WithMany("Payments")
+                        .HasForeignKey("PaymentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Repository.Entities.Subscription", "Subscription")
+                        .WithMany("Payments")
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Advertisement");
+
+                    b.Navigation("Employer");
+
+                    b.Navigation("PaymentType");
+
+                    b.Navigation("Subscription");
+                });
+
             modelBuilder.Entity("Repository.Entities.Resume", b =>
                 {
                     b.HasOne("Repository.Entities.Worker", "Worker")
@@ -1550,6 +1650,25 @@ namespace Repository.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Repository.Entities.Subscription", b =>
+                {
+                    b.HasOne("Repository.Entities.Employer", "Employer")
+                        .WithMany("Subscriptions")
+                        .HasForeignKey("EmployerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Repository.Entities.SubscriptionPackage", "SubscriptionPackage")
+                        .WithMany("Subscriptions")
+                        .HasForeignKey("SubscriptionPackageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employer");
+
+                    b.Navigation("SubscriptionPackage");
                 });
 
             modelBuilder.Entity("Repository.Entities.Worker", b =>
@@ -1605,25 +1724,6 @@ namespace Repository.Migrations
                     b.Navigation("WorkerRating");
                 });
 
-            modelBuilder.Entity("Subscription", b =>
-                {
-                    b.HasOne("Repository.Entities.Employer", "Employer")
-                        .WithMany("Subscriptions")
-                        .HasForeignKey("EmployerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Repository.Entities.SubscriptionPackage", "SubscriptionPackage")
-                        .WithMany("Subscriptions")
-                        .HasForeignKey("SubscriptionPackageId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Employer");
-
-                    b.Navigation("SubscriptionPackage");
-                });
-
             modelBuilder.Entity("Repository.Entities.AdvertisementPackage", b =>
                 {
                     b.Navigation("Advertisements");
@@ -1646,6 +1746,8 @@ namespace Repository.Migrations
                     b.Navigation("EmployerRatings");
 
                     b.Navigation("JobPostings");
+
+                    b.Navigation("Payments");
 
                     b.Navigation("Subscriptions");
                 });
@@ -1671,6 +1773,11 @@ namespace Repository.Migrations
                     b.Navigation("JobPostingTags");
                 });
 
+            modelBuilder.Entity("Repository.Entities.PaymentType", b =>
+                {
+                    b.Navigation("Payments");
+                });
+
             modelBuilder.Entity("Repository.Entities.RatingCriteria", b =>
                 {
                     b.Navigation("EmployerRatingCriterias");
@@ -1682,6 +1789,13 @@ namespace Repository.Migrations
                 {
                     b.Navigation("JobApplications")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Repository.Entities.Subscription", b =>
+                {
+                    b.Navigation("JobPostings");
+
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("Repository.Entities.SubscriptionPackage", b =>
@@ -1712,11 +1826,6 @@ namespace Repository.Migrations
             modelBuilder.Entity("Repository.Entities.WorkerRating", b =>
                 {
                     b.Navigation("RatingCriterias");
-                });
-
-            modelBuilder.Entity("Subscription", b =>
-                {
-                    b.Navigation("JobPostings");
                 });
 #pragma warning restore 612, 618
         }
