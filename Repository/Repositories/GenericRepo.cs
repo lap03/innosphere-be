@@ -108,6 +108,13 @@ namespace Repository.Repositories
             return await query.FirstOrDefaultAsync(predicate);
         }
 
+        public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate = null)
+        {
+            if (predicate == null)
+                return await _dbContext.Set<TEntity>().AnyAsync();
+            return await _dbContext.Set<TEntity>().AnyAsync(predicate);
+        }
+
         //ADD
         public async Task<TEntity> AddAsync(TEntity entity)
         {
