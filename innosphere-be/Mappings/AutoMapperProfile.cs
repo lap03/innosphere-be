@@ -106,6 +106,12 @@ namespace innosphere_be.Mappings
             CreateMap<Subscription, SubscriptionModel>().ReverseMap();
             CreateMap<Subscription, CreateSubscriptionModel>().ReverseMap();
             CreateMap<Subscription, UpdateSubscriptionModel>().ReverseMap();
+
+            // JobPosting
+            CreateMap<CreateJobPostingModel, JobPosting>().ReverseMap();
+            CreateMap<JobPosting, JobPostingModel>()
+                .ForMember(dest => dest.JobTags, opt => opt.MapFrom(src => src.JobPostingTags.Select(jpt => jpt.JobTag)))
+                .ReverseMap();
         }
     }
 }

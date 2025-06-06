@@ -66,6 +66,7 @@ namespace innosphere_be.Configurations
             services.AddScoped<IAuthService, AuthService>();
 
             services.AddScoped<ICityService, CityService>();
+            services.AddScoped<IJobPostingService, JobPostingService>();
             services.AddScoped<IJobTagService, JobTagService>();
             services.AddScoped<IPaymentTypeService, PaymentTypeService>();
             services.AddScoped<ISubscriptionPackageService, SubscriptionPackageService>();
