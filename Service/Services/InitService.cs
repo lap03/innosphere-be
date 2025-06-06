@@ -54,10 +54,41 @@ namespace Service.Services
             {
                 var jobTags = new List<JobTag>
                 {
-                    new JobTag { TagName = "Full-Time", IsDeleted = false, CreatedAt = DateTime.UtcNow },
-                    new JobTag { TagName = "Part-Time", IsDeleted = false, CreatedAt = DateTime.UtcNow },
-                    new JobTag { TagName = "Internship", IsDeleted = false, CreatedAt = DateTime.UtcNow }
+                    // Restaurant & Food Service
+                    new JobTag { TagName = "Waiter/Waitress", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Cashier", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Barista", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Bartender", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Chef", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Sous Chef", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Line Cook", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Kitchen Assistant", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Dishwasher", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Restaurant Manager", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Host/Hostess", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Food Runner", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Delivery Staff", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+
+                    // Retail
+                    new JobTag { TagName = "Sales Associate", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Store Manager", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Stocker", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Inventory Clerk", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Customer Service", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Visual Merchandiser", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Security Guard", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+
+                    // General/Other
+                    new JobTag { TagName = "Frontend Developer", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Backend Developer", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Mobile Developer", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Marketing Staff", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Accountant", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Receptionist", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Cleaner", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new JobTag { TagName = "Driver", IsDeleted = false, CreatedAt = DateTime.UtcNow },
                 };
+
                 var repo = _unitOfWork.GetRepository<JobTag>();
 
                 if (await repo.AnyAsync())

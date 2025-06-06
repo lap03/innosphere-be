@@ -24,7 +24,7 @@ namespace Repository.Entities
 
         [Required(ErrorMessage = "Job description is required.")]
         [StringLength(500, ErrorMessage = "Job cannot exceed 500 characters.")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [StringLength(255, ErrorMessage = "Location cannot exceed 255 characters.")]
         public string Location { get; set; }
@@ -40,7 +40,7 @@ namespace Repository.Entities
         [RegularExpression("^(FullTime|PartTime|Freelance)$", ErrorMessage = "Invalid job type.")]
         public string JobType { get; set; }
 
-        public string Requirements { get; set; }
+        public string? Requirements { get; set; }
 
         [Required(ErrorMessage = "Posted date is required.")]
         public DateTime PostedAt { get; set; }
@@ -48,7 +48,7 @@ namespace Repository.Entities
         public DateTime? ExpiresAt { get; set; }
 
         [StringLength(20)]
-        [RegularExpression("^(PENDING|APPROVED|CLOSED)$", ErrorMessage = "Invalid job status.")]
+        [RegularExpression("^(PENDING|APPROVED|CLOSED|REJECT)$", ErrorMessage = "Invalid job status.")]
         public string Status { get; set; } = "PENDING";
 
         public bool IsUrgent { get; set; } = false;
