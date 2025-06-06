@@ -27,7 +27,6 @@ namespace Repository.Data
         public DbSet<SubscriptionPackage> SubscriptionPackages { get; set; }
         public DbSet<Advertisement> Advertisements { get; set; }
         public DbSet<AdvertisementPackage> AdvertisementPackages { get; set; }
-        public DbSet<Payment> Payments { get; set; }
         public DbSet<PaymentType> PaymentTypes { get; set; }
 
         public DbSet<EmployerRating> EmployerRatings { get; set; }
@@ -40,14 +39,15 @@ namespace Repository.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            //insert role
+            // Insert role data
             modelBuilder.ApplyConfiguration(new RoleHardData());
 
-            //rename AspNetUser and AspNetRole to Users and Roles
+            // Rename Identity tables
             modelBuilder.Entity<User>().ToTable("Users");
             modelBuilder.Entity<IdentityRole>().ToTable("Roles");
             modelBuilder.Entity<IdentityUserRole<string>>().ToTable("UserRoles");
-            // Disable cascading delete globally
+
+            // Disable cascading delete globally except ownership
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 foreach (var fk in entityType.GetForeignKeys())
@@ -59,7 +59,7 @@ namespace Repository.Data
                 }
             }
 
-            // Cascade for Employer relationships
+            // Cascade delete for Employer relations without Payments
             modelBuilder.Entity<Employer>()
                 .HasMany(e => e.JobPostings)
                 .WithOne(j => j.Employer)
@@ -70,12 +70,6 @@ namespace Repository.Data
                 .HasMany(e => e.Subscriptions)
                 .WithOne(s => s.Employer)
                 .HasForeignKey(s => s.EmployerId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Employer>()
-                .HasMany(e => e.Payments)
-                .WithOne(p => p.Employer)
-                .HasForeignKey(p => p.EmployerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Employer>()
@@ -106,12 +100,7 @@ namespace Repository.Data
                 .HasIndex(e => e.UserId)
                 .IsUnique();
 
-            // Payment - Advertisement (1-1 optional)
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.Advertisement)
-                .WithOne()
-                .HasForeignKey<Payment>(p => p.AdvertisementId)
-                .OnDelete(DeleteBehavior.Restrict);
+            // Remove Payment related configurations
 
             // JobApplication - EmployerRating (1-1)
             modelBuilder.Entity<EmployerRating>()

@@ -10,12 +10,12 @@ namespace Service.Models.AdvertisementPackageModels
     {
         public int Id { get; set; }
         public string PackageName { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
         public float Price { get; set; }
         public int DurationDays { get; set; }
         public int? MaxImpressions { get; set; }
         public string AdPosition { get; set; }
         public string AllowedAdTypes { get; set; }
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
     }
 }

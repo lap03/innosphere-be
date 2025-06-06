@@ -13,7 +13,7 @@ namespace Service.Models.AdvertisementPackageModels
         [StringLength(100, ErrorMessage = "Package name cannot exceed 100 characters.")]
         public string PackageName { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Required(ErrorMessage = "Price is required.")]
         [Range(0, double.MaxValue, ErrorMessage = "Price must be positive.")]
@@ -28,12 +28,12 @@ namespace Service.Models.AdvertisementPackageModels
 
         [Required(ErrorMessage = "Ad position is required.")]
         [StringLength(50)]
-        [RegularExpression("^(Top|Sidebar|Footer)$", ErrorMessage = "Position must be Top, Sidebar, or Footer.")]
+        [RegularExpression("^(Top|Sidebar|DetailPage)$", ErrorMessage = "Position must be Top, Sidebar, or DetailPage.")]
         public string AdPosition { get; set; }
 
         [StringLength(100, ErrorMessage = "Allowed ad types cannot exceed 100 characters.")]
         public string AllowedAdTypes { get; set; } = "ALL";
 
-        public bool IsActive { get; set; } = true;
+        public bool? IsActive { get; set; } = true;
     }
 }

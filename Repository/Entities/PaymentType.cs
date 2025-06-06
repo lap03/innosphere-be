@@ -12,6 +12,5 @@ namespace Repository.Entities
         [StringLength(255, ErrorMessage = "Description cannot exceed 255 characters.")]
         public string Description { get; set; }
 
-        public virtual ICollection<Payment> Payments { get; set; }
     }
 }

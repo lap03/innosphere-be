@@ -13,7 +13,7 @@ namespace Service.Models.SubscriptionPackageModels
         [StringLength(100, ErrorMessage = "Package name cannot exceed 100 characters.")]
         public string PackageName { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Required(ErrorMessage = "Price is required.")]
         [Range(0, double.MaxValue, ErrorMessage = "Price must be positive.")]
@@ -36,6 +36,6 @@ namespace Service.Models.SubscriptionPackageModels
         public bool AllowUrgentPosts { get; set; } = false;
         public bool AllowHighlightedPosts { get; set; } = false;
         public bool AllowBrandPromotion { get; set; } = false;
-        public bool IsActive { get; set; } = true;
+        public bool? IsActive { get; set; } = true;
     }
 }

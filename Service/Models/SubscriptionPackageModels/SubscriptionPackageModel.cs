@@ -10,7 +10,7 @@ namespace Service.Models.SubscriptionPackageModels
     {
         public int Id { get; set; }
         public string PackageName { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
         public float Price { get; set; }
         public int DurationDays { get; set; }
         public int JobPostLimit { get; set; }
@@ -19,6 +19,6 @@ namespace Service.Models.SubscriptionPackageModels
         public int? ProfileViewsLimit { get; set; }
         public int? ProfileStorageDays { get; set; }
         public bool AllowBrandPromotion { get; set; }
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
     }
 }

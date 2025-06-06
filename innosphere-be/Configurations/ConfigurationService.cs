@@ -64,9 +64,17 @@ namespace innosphere_be.Configurations
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IInitService, InitService>();
             services.AddScoped<IAuthService, AuthService>();
+
+            services.AddScoped<ICityService, CityService>();
             services.AddScoped<IJobPostingService, JobPostingService>();
             services.AddScoped<IJobTagService, JobTagService>();
-
+            services.AddScoped<IPaymentTypeService, PaymentTypeService>();
+            services.AddScoped<ISubscriptionPackageService, SubscriptionPackageService>();
+            services.AddScoped<IAdvertisementPackageService, AdvertisementPackageService>();
+            services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<ISocialLinkService, SocialLinkService>();
+            services.AddScoped<IAdvertisementService, AdvertisementService>();
+            services.AddScoped<ISubscriptionService, SubscriptionService>();
         }
 
         public static void SetupJWT(this IServiceCollection services, IConfiguration configuration)
