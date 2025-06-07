@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Repository.Entities;
 using Repository.Helpers;
 using Service.Interfaces;
 using Service.Models.JobPostings;
+using Service.Models.PagedResultModels;
 using Service.Services;
 
 namespace innosphere_be.Controllers
@@ -18,16 +20,24 @@ namespace innosphere_be.Controllers
             _jobPostingService = jobPostingService;
         }
 
-        // Tạo bài đăng mới
-        [HttpPost]
-        [Authorize(Roles = "Employer")]
-        public async Task<IActionResult> Create([FromBody] CreateJobPostingModel model)
+        [HttpGet]
+        public async Task<ActionResult<PagedResultModel<JobPostingModel>>> GetJobPostings([FromQuery] JobPostingFilterModel filter)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                // Set default values if not provided
+                filter.Page = filter.Page <= 0 ? 1 : filter.Page;
+                filter.PageSize = filter.PageSize <= 0 ? 10 : filter.PageSize;
+                filter.PageSize = filter.PageSize > 100 ? 100 : filter.PageSize; // Limit max page size
 
-            var result = await _jobPostingService.CreateJobPostingAsync(model, model.TagIds);
-            return Ok(result);
+                var result = await _jobPostingService.GetJobPostingsAsync(filter);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving job postings", error = ex.Message });
+            }
         }
 
         // Lấy danh sách bài đăng theo employer
@@ -41,11 +51,39 @@ namespace innosphere_be.Controllers
 
         // Lấy chi tiết bài đăng
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int employerId, [FromQuery] string? status = null)
         {
-            var result = await _jobPostingService.GetJobPostingByIdAsync(id);
-            if (result == null)
-                return NotFound();
+            try
+            {
+                // Validate status if provided
+                if (!string.IsNullOrEmpty(status))
+                {
+                    var validStatuses = new[] { "PENDING", "APPROVED", "CLOSED", "REJECT" };
+                    if (!validStatuses.Contains(status.ToUpper()))
+                    {
+                        return BadRequest(new { message = "Invalid status. Valid values are: PENDING, APPROVED, CLOSED, REJECT" });
+                    }
+                    status = status.ToUpper(); // Normalize to uppercase
+                }
+
+                var result = await _jobPostingService.GetJobPostingsByEmployerAsync(employerId, status);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving employer job postings", error = ex.Message });
+            }
+        }
+
+        // Tạo bài đăng mới
+        [HttpPost]
+        [Authorize(Roles = "Employer")]
+        public async Task<IActionResult> Create([FromBody] CreateJobPostingModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _jobPostingService.CreateJobPostingAsync(model, model.TagIds);
             return Ok(result);
         }
 
