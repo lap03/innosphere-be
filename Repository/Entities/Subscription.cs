@@ -22,7 +22,7 @@ public class Subscription : BaseEntity
 
     [Required(ErrorMessage = "Amount paid is required.")]
     [Range(0, double.MaxValue, ErrorMessage = "Amount must be positive.")]
-    public decimal AmountPaid { get; set; }  
+    public float AmountPaid { get; set; }  
 
     [Required(ErrorMessage = "Payment status is required.")]
     [StringLength(20)]

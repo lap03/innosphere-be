@@ -16,13 +16,13 @@ namespace Repository.Entities
         public int EmployerId { get; set; }
         [Range(0, 5, ErrorMessage = "Rating must be between 0 and 5.")]
         public float RatingValue { get; set; }
-        public string Comment { get; set; }
+        public string? Comment { get; set; }
 
         public DateTime RatedAt { get; set; } = DateTime.Now;
 
         public virtual JobApplication JobApplication { get; set; }
         public virtual Employer Employer { get; set; }
 
-        public virtual ICollection<EmployerRatingCriteria> RatingCriterias { get; set; }
+        public virtual ICollection<EmployerRatingCriteria> Details { get; set; }
     }
 }

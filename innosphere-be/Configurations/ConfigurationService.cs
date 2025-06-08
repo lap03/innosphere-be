@@ -75,6 +75,8 @@ namespace innosphere_be.Configurations
             services.AddScoped<ISocialLinkService, SocialLinkService>();
             services.AddScoped<IAdvertisementService, AdvertisementService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
+            services.AddScoped<IResumeService, ResumeService>();
+            services.AddScoped<IRatingCriteriaService, RatingCriteriaService>();
         }
 
         public static void SetupJWT(this IServiceCollection services, IConfiguration configuration)
