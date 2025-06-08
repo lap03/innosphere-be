@@ -12,6 +12,10 @@ using Service.Models.SocialLinkModels;
 using Service.Models.SubscriptionModels;
 using Service.Models.SubscriptionPackageModels;
 using Service.Models.WorkerModels;
+using Service.Models.ResumeModels;
+using Service.Models.RatingCriteriaModels;
+using Service.Models.WorkerRatingModels;
+using Service.Models.WorkerRatingCriteriaModels;
 
 namespace innosphere_be.Mappings
 {
@@ -111,6 +115,25 @@ namespace innosphere_be.Mappings
             CreateMap<CreateJobPostingModel, JobPosting>().ReverseMap();
             CreateMap<JobPosting, JobPostingModel>()
                 .ForMember(dest => dest.JobTags, opt => opt.MapFrom(src => src.JobPostingTags.Select(jpt => jpt.JobTag)))
+                .ReverseMap();
+
+            // Resume
+            CreateMap<Resume, ResumeModel>().ReverseMap();
+            CreateMap<CreateResumeModel, Resume>().ReverseMap();
+
+            // RatingCriteria
+            CreateMap<RatingCriteria, RatingCriteriaModel>().ReverseMap();
+            CreateMap<CreateRatingCriteriaModel, RatingCriteria>().ReverseMap();
+
+            // WorkerRating <-> WorkerRatingModel
+            CreateMap<WorkerRating, WorkerRatingModel>()
+                .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.Details))
+                .ReverseMap();
+
+            // WorkerRatingCriteria <-> WorkerRatingCriteriaModel
+            CreateMap<WorkerRatingCriteria, WorkerRatingCriteriaModel>()
+                .ForMember(dest => dest.CriteriaName, opt => opt.MapFrom(src => src.RatingCriteria.CriteriaName))
+                .ForMember(dest => dest.CriteriaDescription, opt => opt.MapFrom(src => src.RatingCriteria.Description))
                 .ReverseMap();
         }
     }

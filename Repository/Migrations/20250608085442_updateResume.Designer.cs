@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Repository.Data;
 
@@ -11,9 +12,11 @@ using Repository.Data;
 namespace Repository.Migrations
 {
     [DbContext(typeof(InnoSphereDBContext))]
-    partial class InnoSphereDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250608085442_updateResume")]
+    partial class updateResume
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -448,6 +451,7 @@ namespace Repository.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Comment")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -850,8 +854,12 @@ namespace Repository.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -1169,6 +1177,7 @@ namespace Repository.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Comment")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1419,7 +1428,7 @@ namespace Repository.Migrations
             modelBuilder.Entity("Repository.Entities.EmployerRatingCriteria", b =>
                 {
                     b.HasOne("Repository.Entities.EmployerRating", "EmployerRating")
-                        .WithMany("Details")
+                        .WithMany("RatingCriterias")
                         .HasForeignKey("EmployerRatingId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1586,7 +1595,7 @@ namespace Repository.Migrations
                         .IsRequired();
 
                     b.HasOne("Repository.Entities.WorkerRating", "WorkerRating")
-                        .WithMany("Details")
+                        .WithMany("RatingCriterias")
                         .HasForeignKey("WorkerRatingId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1643,7 +1652,7 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Entities.EmployerRating", b =>
                 {
-                    b.Navigation("Details");
+                    b.Navigation("RatingCriterias");
                 });
 
             modelBuilder.Entity("Repository.Entities.JobPosting", b =>
@@ -1702,7 +1711,7 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Entities.WorkerRating", b =>
                 {
-                    b.Navigation("Details");
+                    b.Navigation("RatingCriterias");
                 });
 
             modelBuilder.Entity("Subscription", b =>
