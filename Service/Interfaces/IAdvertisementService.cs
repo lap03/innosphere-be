@@ -3,12 +3,12 @@
 public interface IAdvertisementService
 {
     Task<AdvertisementModel> CreateAsync(CreateAdvertisementModel dto);
-    Task<List<AdvertisementModel>> GetAllActiveAsync();
-    Task<List<AdvertisementModel>> GetAllAsync();
-    Task<AdvertisementModel> GetByIdAsync(int id);
-    Task<bool> HardDeleteAsync(int id);
+    Task<List<AdvertisementModel>> GetAllActiveByEmployerAsync(int employerId);
+    Task<List<AdvertisementModel>> GetAllByEmployerAsync(int employerId);
+    Task<AdvertisementModel> GetByIdAsync(int id, int employerId);
+    Task<bool> HardDeleteAsync(int id, int employerId);
     Task<bool> IncrementImpressionAsync(int id);
-    Task<bool> RestoreAsync(int id);
-    Task<bool> SoftDeleteAsync(int id);
-    Task<AdvertisementModel> UpdateAsync(int id, UpdateAdvertisementModel dto);
+    Task<bool> RestoreAsync(int id, int employerId);
+    Task<bool> SoftDeleteAsync(int id, int employerId);
+    Task<AdvertisementModel> UpdateAsync(int id, int employerId, UpdateAdvertisementModel dto);
 }

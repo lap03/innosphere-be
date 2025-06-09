@@ -279,5 +279,64 @@ namespace Service.Services
 
             return await _userManager.AddToRoleAsync(user, roleName);
         }
+
+        public async Task<IdentityResult> SeedSubscriptionPackagesAsync()
+        {
+            try
+            {
+                var subscriptionPackages = new List<SubscriptionPackage>
+        {
+            new SubscriptionPackage { PackageName = "Gói Cơ Bản", Description = "Gói đăng tin cơ bản, giới hạn 5 tin đăng", JobPostLimit = 5, Price = 100000, DurationDays = 30, IsDeleted = false, CreatedAt = DateTime.UtcNow },
+            new SubscriptionPackage { PackageName = "Gói Tiêu Chuẩn", Description = "Gói đăng tin tiêu chuẩn, giới hạn 15 tin đăng", JobPostLimit = 15, Price = 250000, DurationDays = 90, IsDeleted = false, CreatedAt = DateTime.UtcNow },
+            new SubscriptionPackage { PackageName = "Gói Cao Cấp", Description = "Gói đăng tin không giới hạn tin đăng", JobPostLimit = int.MaxValue, Price = 500000, DurationDays = 365, IsDeleted = false, CreatedAt = DateTime.UtcNow }
+        };
+
+                var repo = _unitOfWork.GetRepository<SubscriptionPackage>();
+
+                if (await repo.AnyAsync())
+                {
+                    return IdentityResult.Failed(new IdentityError { Description = "Các gói đăng ký đã tồn tại." });
+                }
+
+                await repo.AddRangeAsync(subscriptionPackages);
+                await _unitOfWork.SaveChangesAsync();
+
+                return IdentityResult.Success;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Khởi tạo gói đăng ký thất bại: {ex.Message}");
+            }
+        }
+
+        public async Task<IdentityResult> SeedAdvertisementPackagesAsync()
+        {
+            try
+            {
+                var advertisementPackages = new List<AdvertisementPackage>
+        {
+            new AdvertisementPackage { PackageName = "Gói Khởi Đầu", Description = "Gói quảng cáo khởi đầu với 1000 lượt hiển thị", Price = 150000, MaxImpressions = 1000, DurationDays = 30, IsDeleted = false, CreatedAt = DateTime.UtcNow },
+            new AdvertisementPackage { PackageName = "Gói Doanh Nghiệp", Description = "Gói quảng cáo doanh nghiệp với 5000 lượt hiển thị", Price = 400000, MaxImpressions = 5000, DurationDays = 90, IsDeleted = false, CreatedAt = DateTime.UtcNow },
+            new AdvertisementPackage { PackageName = "Gói Doanh Nghiệp Cao Cấp", Description = "Gói quảng cáo không giới hạn lượt hiển thị", Price = 1000000, MaxImpressions = int.MaxValue, DurationDays = 365, IsDeleted = false, CreatedAt = DateTime.UtcNow }
+        };
+
+                var repo = _unitOfWork.GetRepository<AdvertisementPackage>();
+
+                if (await repo.AnyAsync())
+                {
+                    return IdentityResult.Failed(new IdentityError { Description = "Các gói quảng cáo đã tồn tại." });
+                }
+
+                await repo.AddRangeAsync(advertisementPackages);
+                await _unitOfWork.SaveChangesAsync();
+
+                return IdentityResult.Success;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Khởi tạo gói quảng cáo thất bại: {ex.Message}");
+            }
+        }
+
     }
 }

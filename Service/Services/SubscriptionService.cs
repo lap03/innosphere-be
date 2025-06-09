@@ -6,7 +6,6 @@ using Service.Models.SubscriptionModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Service.Services
@@ -14,170 +13,145 @@ namespace Service.Services
     public class SubscriptionService : ISubscriptionService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IGenericRepo<Subscription> _subscriptionRepo;
         private readonly IMapper _mapper;
 
         public SubscriptionService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
-            _subscriptionRepo = _unitOfWork.GetRepository<Subscription>();
             _mapper = mapper;
         }
-
-        // Kiểm tra và cập nhật trạng thái hết hạn tự động
-        private async Task CheckAndUpdateExpirationAsync(Subscription entity)
+        private async Task UpdateExpirationStatusAsync(Subscription sub)
         {
-            if (entity.IsActive && entity.EndDate < DateTime.UtcNow)
+            if (sub.IsActive && sub.EndDate < DateTime.UtcNow)
             {
-                entity.IsActive = false;
-                await _subscriptionRepo.Update(entity);
+                sub.IsActive = false;
+                var repo = _unitOfWork.GetRepository<Subscription>();
+                await repo.Update(sub);
                 await _unitOfWork.SaveChangesAsync();
             }
         }
 
-        public async Task<List<SubscriptionModel>> GetAllAsync()
+        /// <summary>
+        /// Lấy tất cả subscription của employer, cập nhật trạng thái hết hạn nếu cần.
+        /// </summary>
+        public async Task<List<SubscriptionModel>> GetAllByEmployerAsync(int employerId)
         {
-            var list = await _subscriptionRepo.GetAllAsync();
-            foreach (var entity in list)
+            var repo = _unitOfWork.GetRepository<Subscription>();
+
+            var subscriptions = await repo.GetAllAsync(s => s.EmployerId == employerId);
+
+            foreach (var sub in subscriptions)
             {
-                await CheckAndUpdateExpirationAsync(entity);
+                await UpdateExpirationStatusAsync(sub);
             }
-            list = await _subscriptionRepo.GetAllAsync();
-            return _mapper.Map<List<SubscriptionModel>>(list);
+
+            subscriptions = await repo.GetAllAsync(s => s.EmployerId == employerId);
+            return _mapper.Map<List<SubscriptionModel>>(subscriptions);
         }
 
+        /// <summary>
+        /// Lấy subscription theo Id, cập nhật trạng thái hết hạn nếu cần.
+        /// </summary>
         public async Task<SubscriptionModel> GetByIdAsync(int id)
         {
-            var entity = await _subscriptionRepo.GetByIdAsync(id);
+            var repo = _unitOfWork.GetRepository<Subscription>();
+            var entity = await repo.GetByIdAsync(id);
             if (entity == null)
                 throw new KeyNotFoundException("Subscription not found.");
 
-            await CheckAndUpdateExpirationAsync(entity);
+            await UpdateExpirationStatusAsync(entity);
+
             return _mapper.Map<SubscriptionModel>(entity);
         }
 
-        public async Task<SubscriptionModel> CreateAsync(CreateSubscriptionModel dto)
+        /// <summary>
+        /// Mua gói mới, tự động hủy các gói cũ active.
+        /// </summary>
+        public async Task<SubscriptionModel> PurchaseSubscriptionAsync(CreateSubscriptionModel dto)
         {
             if (dto.StartDate >= dto.EndDate)
                 throw new ArgumentException("StartDate must be before EndDate.");
+
+            var repo = _unitOfWork.GetRepository<Subscription>();
+
+            var activeSubs = await repo.GetAllAsync(s => s.EmployerId == dto.EmployerId && s.IsActive);
+            foreach (var sub in activeSubs)
+            {
+                sub.IsActive = false;
+                await repo.Update(sub);
+            }
+            await _unitOfWork.SaveChangesAsync();
 
             var entity = _mapper.Map<Subscription>(dto);
             entity.IsActive = true;
-            await _subscriptionRepo.AddAsync(entity);
+            await repo.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
+
             return _mapper.Map<SubscriptionModel>(entity);
         }
 
-        public async Task<SubscriptionModel> UpdateAsync(int id, UpdateSubscriptionModel dto)
+        /// <summary>
+        /// Kiểm tra xem employer còn quyền đăng tin hay không.
+        /// </summary>
+        public async Task<bool> CanPostJobAsync(int employerId)
         {
-            var entity = await _subscriptionRepo.GetByIdAsync(id);
-            if (entity == null)
-                throw new KeyNotFoundException("Subscription not found.");
+            var repo = _unitOfWork.GetRepository<Subscription>();
 
-            if (dto.StartDate >= dto.EndDate)
-                throw new ArgumentException("StartDate must be before EndDate.");
+            var subscription = (await repo.GetAllAsync(s => s.EmployerId == employerId && s.IsActive))
+                .OrderByDescending(s => s.EndDate)
+                .FirstOrDefault();
 
-            _mapper.Map(dto, entity);
-            await _subscriptionRepo.Update(entity);
-            await _unitOfWork.SaveChangesAsync();
-            return _mapper.Map<SubscriptionModel>(entity);
-        }
-
-        public async Task<bool> DeleteAsync(int id)
-        {
-            var entity = await _subscriptionRepo.GetByIdAsync(id);
-            if (entity == null)
-                throw new KeyNotFoundException("Subscription not found.");
-
-            entity.IsActive = false;
-            await _subscriptionRepo.Update(entity);
-            await _unitOfWork.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> RestoreAsync(int id)
-        {
-            var entity = await _subscriptionRepo.GetByIdAsync(id);
-            if (entity == null)
-                throw new KeyNotFoundException("Subscription not found.");
-
-            entity.IsActive = true;
-            await _subscriptionRepo.Update(entity);
-            await _unitOfWork.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> HardDeleteAsync(int id)
-        {
-            var entity = await _subscriptionRepo.GetByIdAsync(id);
-            if (entity == null)
-                throw new KeyNotFoundException("Subscription not found.");
-
-            // Kiểm tra ràng buộc FK với JobPosting
-            var jobPostings = await _unitOfWork.GetRepository<JobPosting>()
-                .GetAllAsync(jp => jp.SubscriptionId == id && !jp.IsDeleted);
-            if (jobPostings.Any())
-                throw new InvalidOperationException("Cannot delete Subscription because there are related JobPostings.");
-
-            await _subscriptionRepo.HardDelete(s => s.Id == id);
-            await _unitOfWork.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<bool> CanPostJobAsync(int subscriptionId)
-        {
-            var subscription = await _subscriptionRepo.GetByIdAsync(subscriptionId);
-            if (subscription == null || !subscription.IsActive)
+            if (subscription == null)
                 return false;
 
-            var package = await _unitOfWork.GetRepository<SubscriptionPackage>()
-                .GetByIdAsync(subscription.SubscriptionPackageId);
-
+            var packageRepo = _unitOfWork.GetRepository<SubscriptionPackage>();
+            var package = await packageRepo.GetByIdAsync(subscription.SubscriptionPackageId);
             if (package == null)
                 return false;
 
             if (package.JobPostLimit == int.MaxValue)
                 return true;
 
-            var jobPostings = await _unitOfWork.GetRepository<JobPosting>()
-                .GetAllAsync(jp => jp.SubscriptionId == subscriptionId && !jp.IsDeleted);
+            var jobRepo = _unitOfWork.GetRepository<JobPosting>();
+            var currentPosts = await jobRepo.GetAllAsync(jp => jp.SubscriptionId == subscription.Id && !jp.IsDeleted);
 
-            int usedPosts = jobPostings.Count();
-
-            return usedPosts < package.JobPostLimit;
+            return currentPosts.Count() < package.JobPostLimit;
         }
 
         /// <summary>
-        /// Mua gói mới. Nếu có gói active trước đó thì:
-        /// - Nếu forceReplace = false => lỗi bắt confirm từ frontend.
-        /// - Nếu forceReplace = true => tự hủy gói cũ rồi mua gói mới.
+        /// Hủy subscription (soft delete).
         /// </summary>
-        public async Task<SubscriptionModel> PurchaseSubscriptionAsync(CreateSubscriptionModel dto, bool forceReplace = false)
+        public async Task<bool> CancelSubscriptionAsync(int subscriptionId, int employerId)
         {
-            var activeSubs = await _subscriptionRepo.GetAllAsync(s => s.EmployerId == dto.EmployerId && s.IsActive);
+            var repo = _unitOfWork.GetRepository<Subscription>();
+            var subscription = await repo.GetByIdAsync(subscriptionId);
+            if (subscription == null || subscription.EmployerId != employerId)
+                throw new KeyNotFoundException("Subscription not found or does not belong to employer.");
 
-            if (activeSubs.Any())
-            {
-                if (!forceReplace)
-                    throw new InvalidOperationException("Employer already has an active subscription. Please cancel it before purchasing a new one.");
-
-                // Hủy soft các gói active trước khi mua
-                foreach (var oldSub in activeSubs)
-                {
-                    oldSub.IsActive = false;
-                    await _subscriptionRepo.Update(oldSub);
-                }
-                await _unitOfWork.SaveChangesAsync();
-            }
-
-            if (dto.StartDate >= dto.EndDate)
-                throw new ArgumentException("StartDate must be before EndDate.");
-
-            var entity = _mapper.Map<Subscription>(dto);
-            entity.IsActive = true;
-            await _subscriptionRepo.AddAsync(entity);
+            subscription.IsActive = false;
+            await repo.Update(subscription);
             await _unitOfWork.SaveChangesAsync();
-            return _mapper.Map<SubscriptionModel>(entity);
+            return true;
+        }
+
+        /// <summary>
+        /// Xóa cứng subscription nếu không còn tin đăng liên quan.
+        /// </summary>
+        public async Task<bool> HardDeleteAsync(int subscriptionId, int employerId)
+        {
+            var repo = _unitOfWork.GetRepository<Subscription>();
+            var subscription = await repo.GetByIdAsync(subscriptionId);
+            if (subscription == null || subscription.EmployerId != employerId)
+                throw new KeyNotFoundException("Subscription not found or does not belong to employer.");
+
+            var jobRepo = _unitOfWork.GetRepository<JobPosting>();
+            var relatedJobs = await jobRepo.GetAllAsync(jp => jp.SubscriptionId == subscriptionId && !jp.IsDeleted);
+            if (relatedJobs.Any())
+                throw new InvalidOperationException("Cannot hard delete subscription with active job postings.");
+
+            await repo.HardDelete(s => s.Id == subscriptionId);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
         }
     }
 }

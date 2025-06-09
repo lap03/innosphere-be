@@ -1,80 +1,99 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Service.Models.AdvertisementModels;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
+using Service.Models.AdvertisementModels;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-[Route("api/[controller]")]
-[ApiController]
-public class AdvertisementController : ControllerBase
+namespace YourNamespace.Controllers
 {
-    private readonly IAdvertisementService _adService;
-
-    public AdvertisementController(IAdvertisementService adService)
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize] // Bảo vệ API, yêu cầu đăng nhập
+    public class AdvertisementController : ControllerBase
     {
-        _adService = adService;
-    }
+        private readonly IAdvertisementService _advertisementService;
 
-    [HttpGet]
-    public async Task<ActionResult<List<AdvertisementModel>>> GetAll()
-    {
-        var list = await _adService.GetAllAsync();
-        return Ok(list);
-    }
+        public AdvertisementController(IAdvertisementService advertisementService)
+        {
+            _advertisementService = advertisementService;
+        }
 
-    [HttpGet("active")]
-    public async Task<ActionResult<List<AdvertisementModel>>> GetAllActive()
-    {
-        var list = await _adService.GetAllActiveAsync();
-        return Ok(list);
-    }
+        // Lấy tất cả quảng cáo của employer
+        [HttpGet("employer/{employerId}")]
+        public async Task<ActionResult<List<AdvertisementModel>>> GetAllByEmployer(int employerId)
+        {
+            var ads = await _advertisementService.GetAllByEmployerAsync(employerId);
+            return Ok(ads);
+        }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<AdvertisementModel>> GetById(int id)
-    {
-        var ad = await _adService.GetByIdAsync(id);
-        return Ok(ad);
-    }
+        // Lấy tất cả quảng cáo active và còn hạn của employer
+        [HttpGet("employer/{employerId}/active")]
+        public async Task<ActionResult<List<AdvertisementModel>>> GetAllActiveByEmployer(int employerId)
+        {
+            var ads = await _advertisementService.GetAllActiveByEmployerAsync(employerId);
+            return Ok(ads);
+        }
 
-    [HttpPost]
-    public async Task<ActionResult<AdvertisementModel>> Create(CreateAdvertisementModel dto)
-    {
-        var created = await _adService.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-    }
+        // Lấy quảng cáo theo Id (kiểm tra quyền)
+        [HttpGet("{id}/employer/{employerId}")]
+        public async Task<ActionResult<AdvertisementModel>> GetById(int id, int employerId)
+        {
+            var ad = await _advertisementService.GetByIdAsync(id, employerId);
+            return Ok(ad);
+        }
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult<AdvertisementModel>> Update(int id, UpdateAdvertisementModel dto)
-    {
-        var updated = await _adService.UpdateAsync(id, dto);
-        return Ok(updated);
-    }
+        // Tạo quảng cáo mới
+        [HttpPost]
+        public async Task<ActionResult<AdvertisementModel>> Create([FromBody] CreateAdvertisementModel dto)
+        {
+            var createdAd = await _advertisementService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = createdAd.Id, employerId = createdAd.EmployerId }, createdAd);
+        }
 
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> SoftDelete(int id)
-    {
-        await _adService.SoftDeleteAsync(id);
-        return NoContent();
-    }
+        // Cập nhật quảng cáo
+        [HttpPut("{id}/employer/{employerId}")]
+        public async Task<ActionResult<AdvertisementModel>> Update(int id, int employerId, [FromBody] UpdateAdvertisementModel dto)
+        {
+            var updatedAd = await _advertisementService.UpdateAsync(id, employerId, dto);
+            return Ok(updatedAd);
+        }
 
-    [HttpPost("{id}/restore")]
-    public async Task<ActionResult> Restore(int id)
-    {
-        await _adService.RestoreAsync(id);
-        return NoContent();
-    }
+        // Soft delete quảng cáo
+        [HttpDelete("{id}/employer/{employerId}")]
+        public async Task<ActionResult> SoftDelete(int id, int employerId)
+        {
+            var result = await _advertisementService.SoftDeleteAsync(id, employerId);
+            if (!result) return NotFound();
+            return NoContent();
+        }
 
-    [HttpDelete("{id}/hard")]
-    public async Task<ActionResult> HardDelete(int id)
-    {
-        await _adService.HardDeleteAsync(id);
-        return NoContent();
-    }
+        // Khôi phục quảng cáo
+        [HttpPatch("{id}/employer/{employerId}/restore")]
+        public async Task<ActionResult> Restore(int id, int employerId)
+        {
+            var result = await _advertisementService.RestoreAsync(id, employerId);
+            if (!result) return NotFound();
+            return NoContent();
+        }
 
-    [HttpPost("{id}/increment-impression")]
-    public async Task<ActionResult> IncrementImpression(int id)
-    {
-        await _adService.IncrementImpressionAsync(id);
-        return NoContent();
+        // Xóa cứng quảng cáo
+        [HttpDelete("{id}/employer/{employerId}/hard")]
+        public async Task<ActionResult> HardDelete(int id, int employerId)
+        {
+            var result = await _advertisementService.HardDeleteAsync(id, employerId);
+            if (!result) return NotFound();
+            return NoContent();
+        }
+
+        // Tăng lượt hiển thị quảng cáo
+        [HttpPost("{id}/increment-impression")]
+        [AllowAnonymous] // Có thể để public để frontend gọi tăng lượt xem
+        public async Task<ActionResult> IncrementImpression(int id)
+        {
+            var result = await _advertisementService.IncrementImpressionAsync(id);
+            if (!result) return NotFound();
+            return NoContent();
+        }
     }
 }
