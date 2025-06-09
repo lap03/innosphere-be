@@ -119,7 +119,7 @@ namespace Repository.Data
             // RatingCriteria - WorkerRatingCriteria (1-n)
             modelBuilder.Entity<WorkerRatingCriteria>()
                 .HasOne(wrc => wrc.WorkerRating)
-                .WithMany(wr => wr.RatingCriterias)
+                .WithMany(wr => wr.Details)
                 .HasForeignKey(wrc => wrc.WorkerRatingId);
 
             modelBuilder.Entity<WorkerRatingCriteria>()
@@ -130,7 +130,7 @@ namespace Repository.Data
             // RatingCriteria - EmployerRatingCriteria (1-n)
             modelBuilder.Entity<EmployerRatingCriteria>()
                 .HasOne(erc => erc.EmployerRating)
-                .WithMany(er => er.RatingCriterias)
+                .WithMany(er => er.Details)
                 .HasForeignKey(erc => erc.EmployerRatingId);
 
             modelBuilder.Entity<EmployerRatingCriteria>()

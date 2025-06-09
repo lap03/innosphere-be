@@ -48,7 +48,7 @@ namespace Repository.Entities
         public DateTime? ExpiresAt { get; set; }
 
         [StringLength(20)]
-        [RegularExpression("^(PENDING|APPROVED|CLOSED|REJECT)$", ErrorMessage = "Invalid job status.")]
+        [RegularExpression("^(PENDING|APPROVED|CLOSED|REJECT|COMPLETED)$", ErrorMessage = "Invalid job status.")]
         public string Status { get; set; } = "PENDING";
 
         public bool IsUrgent { get; set; } = false;

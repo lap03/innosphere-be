@@ -1,9 +1,13 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Repository.Entities;
 using Repository.Helpers;
 using Repository.Interfaces;
+using Service.Extensions;
 using Service.Interfaces;
 using Service.Models.JobPostings;
+using Service.Models.PagedResultModels;
+using System.Linq.Expressions;
 
 namespace Service.Services
 {
@@ -18,12 +22,57 @@ namespace Service.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<JobPostingModel>> GetJobPostingsByEmployerAsync(int employerId)
+        public async Task<PagedResultModel<JobPostingModel>> GetJobPostingsAsync(JobPostingFilterModel filter)
+        {
+            var query = _unitOfWork.GetRepository<JobPosting>()
+                .GetAllQueryable() // Sử dụng AsQueryable thay vì GetAll
+                .ApplyBaseQuery()
+                .FilterByCity(filter.CityId)
+                .FilterByJobType(filter.JobType)
+                .FilterByStatus(filter.Status)
+                .FilterByHourlyRateRange(filter.MinHourlyRate, filter.MaxHourlyRate)
+                .FilterByStartDate(filter.StartFrom)
+                .FilterByEndDate(filter.EndTo)
+                .FilterByKeyword(filter.Keyword)
+                .ApplyDefaultSorting();
+
+            // Get total count before paging
+            var totalCount = await query.CountAsync();
+
+            // Apply paging
+            var data = await query
+                .Skip((filter.Page - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToListAsync();
+
+            // Map to model
+            var mappedData = _mapper.Map<IEnumerable<JobPostingModel>>(data);
+
+            return new PagedResultModel<JobPostingModel>
+            {
+                Data = mappedData,
+                Page = filter.Page,
+                PageSize = filter.PageSize,
+                TotalCount = totalCount
+            };
+        }
+
+        public async Task<IEnumerable<JobPostingModel>> GetJobPostingsByEmployerAsync(int employerId, string? status = null)
         {
             var repo = _unitOfWork.GetRepository<JobPosting>();
+
+            // Build predicate based on parameters
+            Expression<Func<JobPosting, bool>> predicate = j => j.EmployerId == employerId && !j.IsDeleted;
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                predicate = j => j.EmployerId == employerId && !j.IsDeleted && j.Status == status;
+            }
+
             var result = await repo.GetAllAsync(
-                j => j.EmployerId == employerId && !j.IsDeleted,
-                j => j.JobPostingTags.Select(jpt => jpt.JobTag)
+                predicate,
+                j => j.JobPostingTags.Select(jpt => jpt.JobTag),
+                j => j.City
             );
 
             if (result == null || !result.Any())
