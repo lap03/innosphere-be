@@ -4,14 +4,11 @@ namespace Service.Interfaces
 {
     public interface ISubscriptionService
     {
-        Task<bool> CanPostJobAsync(int subscriptionId);
-        Task<SubscriptionModel> CreateAsync(CreateSubscriptionModel dto);
-        Task<bool> DeleteAsync(int id);
-        Task<List<SubscriptionModel>> GetAllAsync();
+        Task<bool> CancelSubscriptionAsync(int subscriptionId, int employerId);
+        Task<bool> CanPostJobAsync(int employerId);
+        Task<List<SubscriptionModel>> GetAllByEmployerAsync(int employerId);
         Task<SubscriptionModel> GetByIdAsync(int id);
-        Task<bool> HardDeleteAsync(int id);
-        Task<SubscriptionModel> PurchaseSubscriptionAsync(CreateSubscriptionModel dto, bool forceReplace = false);
-        Task<bool> RestoreAsync(int id);
-        Task<SubscriptionModel> UpdateAsync(int id, UpdateSubscriptionModel dto);
+        Task<bool> HardDeleteAsync(int subscriptionId, int employerId);
+        Task<SubscriptionModel> PurchaseSubscriptionAsync(CreateSubscriptionModel dto);
     }
 }

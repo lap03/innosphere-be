@@ -1,4 +1,5 @@
-﻿using Repository.Entities;
+﻿using Microsoft.EntityFrameworkCore.Storage;
+using Repository.Entities;
 
 namespace Repository.Interfaces
 {
@@ -7,5 +8,6 @@ namespace Repository.Interfaces
         void Dispose();
         IGenericRepo<T> GetRepository<T>() where T : BaseEntity;
         Task<int> SaveChangesAsync();
+        Task<IDbContextTransaction> BeginTransactionAsync();
     }
 }

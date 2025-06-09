@@ -49,9 +49,35 @@ namespace Service.Services
         {
             var jobPostingRepo = _unitOfWork.GetRepository<JobPosting>();
             var jobPostingTagRepo = _unitOfWork.GetRepository<JobPostingTag>();
+            var subscriptionRepo = _unitOfWork.GetRepository<Subscription>();
+            var packageRepo = _unitOfWork.GetRepository<SubscriptionPackage>();
+            var jobRepo = _unitOfWork.GetRepository<JobPosting>();
+
+            // Bắt đầu transaction để đảm bảo atomicity (toàn bộ hoặc không có gì)
+            using var transaction = await _unitOfWork.BeginTransactionAsync();
 
             try
             {
+                // 1. Lấy subscription active mới nhất của employer
+                var subscription = (await subscriptionRepo.GetAllAsync(s => s.EmployerId == model.EmployerId && s.IsActive))
+                                    .OrderByDescending(s => s.EndDate)
+                                    .FirstOrDefault();
+
+                if (subscription == null)
+                    throw new InvalidOperationException("Employer has no active subscription.");
+
+                // 2. Lấy gói subscription để kiểm tra giới hạn đăng tin
+                var package = await packageRepo.GetByIdAsync(subscription.SubscriptionPackageId);
+                if (package == null)
+                    throw new InvalidOperationException("Subscription package not found.");
+
+                // 3. Nếu giới hạn tin đăng không phải vô hạn, kiểm tra số lượng bài đã đăng
+                if (package.JobPostLimit != int.MaxValue)
+                {
+                    var currentPostCount = await jobRepo.CountAsync(jp => jp.SubscriptionId == subscription.Id && !jp.IsDeleted);
+                    if (currentPostCount >= package.JobPostLimit)
+                        throw new InvalidOperationException("Job post limit reached for current subscription.");
+                }
                 var jobPosting = _mapper.Map<JobPosting>(model);
 
                 jobPosting.PostedAt = DateTime.UtcNow;
@@ -76,10 +102,15 @@ namespace Service.Services
                 }
                 await _unitOfWork.SaveChangesAsync();
 
+                // 6. Commit transaction thành công
+                await transaction.CommitAsync();
+
                 return _mapper.Map<JobPostingModel>(jobPosting);
             }
             catch (Exception)
             {
+                // Nếu có lỗi, rollback transaction
+                await transaction.RollbackAsync();
                 throw;
             }
         }

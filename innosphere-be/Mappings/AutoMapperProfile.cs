@@ -5,6 +5,7 @@ using Service.Models.AdvertisementModels;
 using Service.Models.AdvertisementPackageModels;
 using Service.Models.CityModels;
 using Service.Models.EmployerModels;
+using Service.Models.JobApplicationModels;
 using Service.Models.JobPostings;
 using Service.Models.JobTagModels;
 using Service.Models.NotificationModels;
@@ -112,6 +113,23 @@ namespace innosphere_be.Mappings
             CreateMap<JobPosting, JobPostingModel>()
                 .ForMember(dest => dest.JobTags, opt => opt.MapFrom(src => src.JobPostingTags.Select(jpt => jpt.JobTag)))
                 .ReverseMap();
+
+            CreateMap<JobApplication, JobApplicationModel>()
+                .ForMember(dest => dest.JobTitle, opt => opt.MapFrom(src => src.JobPosting != null ? src.JobPosting.Title : string.Empty))
+                .ForMember(dest => dest.WorkerName, opt => opt.MapFrom(src => src.Worker != null && src.Worker.User != null ? src.Worker.User.FullName : string.Empty))
+                .ForMember(dest => dest.ResumeTitle, opt => opt.MapFrom(src => src.Resume != null ? src.Resume.Title : string.Empty))
+                .ReverseMap();
+
+            CreateMap<CreateJobApplicationModel, JobApplication>()
+                .ForMember(dest => dest.AppliedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.Worker, opt => opt.Ignore())
+                .ForMember(dest => dest.Employer, opt => opt.Ignore())
+                .ForMember(dest => dest.JobPosting, opt => opt.Ignore())
+                .ForMember(dest => dest.Resume, opt => opt.Ignore());
+
+            CreateMap<UpdateJobApplicationStatusModel, JobApplication>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
         }
     }
 }
