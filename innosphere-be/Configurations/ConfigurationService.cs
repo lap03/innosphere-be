@@ -45,7 +45,7 @@ namespace innosphere_be.Configurations
             });
             services.Configure<DataProtectionTokenProviderOptions>("SixDigitOTP", opt =>
             {
-                opt.TokenLifespan = TimeSpan.FromMinutes(1); // Riêng cho OTP
+                opt.TokenLifespan = TimeSpan.FromMinutes(5); // Riêng cho OTP
             });
         }
 
@@ -102,8 +102,8 @@ namespace innosphere_be.Configurations
                 })
                 .AddGoogle(options =>
                 {
-                    options.ClientId = configuration["Authentication:Google:ClientId"];
-                    options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
+                    options.ClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID");
+                    options.ClientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET");
                 });
 
             services.AddAuthorization();
