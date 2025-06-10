@@ -16,6 +16,8 @@ using Service.Models.ResumeModels;
 using Service.Models.RatingCriteriaModels;
 using Service.Models.WorkerRatingModels;
 using Service.Models.WorkerRatingCriteriaModels;
+using Service.Models.EmployerRatingModels;
+using Service.Models.EmployerRatingCriteriaModels;
 
 namespace innosphere_be.Mappings
 {
@@ -132,6 +134,17 @@ namespace innosphere_be.Mappings
 
             // WorkerRatingCriteria <-> WorkerRatingCriteriaModel
             CreateMap<WorkerRatingCriteria, WorkerRatingCriteriaModel>()
+                .ForMember(dest => dest.CriteriaName, opt => opt.MapFrom(src => src.RatingCriteria.CriteriaName))
+                .ForMember(dest => dest.CriteriaDescription, opt => opt.MapFrom(src => src.RatingCriteria.Description))
+                .ReverseMap();
+
+            // EmployerRating <-> EmployerRatingModel
+            CreateMap<EmployerRating, EmployerRatingModel>()
+                .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.Details))
+                .ReverseMap();
+
+            // EmployerRatingCriteria <-> EmployerRatingCriteriaModel
+            CreateMap<EmployerRatingCriteria, EmployerRatingCriteriaModel>()
                 .ForMember(dest => dest.CriteriaName, opt => opt.MapFrom(src => src.RatingCriteria.CriteriaName))
                 .ForMember(dest => dest.CriteriaDescription, opt => opt.MapFrom(src => src.RatingCriteria.Description))
                 .ReverseMap();
