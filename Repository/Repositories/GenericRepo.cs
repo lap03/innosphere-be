@@ -213,5 +213,10 @@ namespace Repository.Repositories
         {
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            return await _dbContext.Set<TEntity>().CountAsync(predicate);
+        }
     }
 }

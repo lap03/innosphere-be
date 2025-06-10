@@ -20,5 +20,6 @@ namespace Repository.Interfaces
         Task<bool> SoftDeleteRange(List<TEntity> entities);
         Task<bool> Update(TEntity entity);
         Task<bool> UpdateRange(List<TEntity> entities);
+        Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate);
     }
 }

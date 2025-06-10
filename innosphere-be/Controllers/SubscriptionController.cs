@@ -1,82 +1,104 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Service.Models.SubscriptionModels;
 using Service.Interfaces;
-using System.Collections.Generic;
+using Service.Models.SubscriptionModels;
+using System;
 using System.Threading.Tasks;
 
-[Route("api/[controller]")]
-[ApiController]
-public class SubscriptionController : ControllerBase
+namespace innosphere_be.Controllers
 {
-    private readonly ISubscriptionService _subscriptionService;
-
-    public SubscriptionController(ISubscriptionService subscriptionService)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class SubscriptionController : ControllerBase
     {
-        _subscriptionService = subscriptionService;
-    }
+        private readonly ISubscriptionService _subscriptionService;
 
-    [HttpGet]
-    public async Task<ActionResult<List<SubscriptionModel>>> GetAll()
-    {
-        var list = await _subscriptionService.GetAllAsync();
-        return Ok(list);
-    }
+        public SubscriptionController(ISubscriptionService subscriptionService)
+        {
+            _subscriptionService = subscriptionService;
+        }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<SubscriptionModel>> GetById(int id)
-    {
-        var subscription = await _subscriptionService.GetByIdAsync(id);
-        return Ok(subscription);
-    }
+        // Lấy tất cả subscription của employer (đầu vào employerId)
+        [HttpGet("employer/{employerId}")]
+        public async Task<IActionResult> GetAllByEmployer(int employerId)
+        {
+            var list = await _subscriptionService.GetAllByEmployerAsync(employerId);
+            return Ok(list);
+        }
 
-    [HttpPost]
-    public async Task<ActionResult<SubscriptionModel>> Create(CreateSubscriptionModel dto)
-    {
-        var created = await _subscriptionService.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-    }
+        // Lấy subscription theo Id
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            try
+            {
+                var result = await _subscriptionService.GetByIdAsync(id);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+        }
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult<SubscriptionModel>> Update(int id, UpdateSubscriptionModel dto)
-    {
-        var updated = await _subscriptionService.UpdateAsync(id, dto);
-        return Ok(updated);
-    }
+        // Mua subscription mới cho employer
+        [HttpPost("purchase")]
+        public async Task<IActionResult> Purchase([FromBody] CreateSubscriptionModel dto)
+        {
+            try
+            {
+                var result = await _subscriptionService.PurchaseSubscriptionAsync(dto);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> SoftDelete(int id)
-    {
-        await _subscriptionService.DeleteAsync(id);
-        return NoContent();
-    }
+        // Kiểm tra employer còn quyền đăng tin hay không
+        [HttpGet("employer/{employerId}/canpost")]
+        public async Task<IActionResult> CanPost(int employerId)
+        {
+            var canPost = await _subscriptionService.CanPostJobAsync(employerId);
+            return Ok(canPost);
+        }
 
-    [HttpPost("{id}/restore")]
-    public async Task<ActionResult> Restore(int id)
-    {
-        await _subscriptionService.RestoreAsync(id);
-        return NoContent();
-    }
+        // Hủy subscription (soft delete)
+        [HttpPut("{id}/cancel/{employerId}")]
+        public async Task<IActionResult> Cancel(int id, int employerId)
+        {
+            try
+            {
+                var result = await _subscriptionService.CancelSubscriptionAsync(id, employerId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+        }
 
-    [HttpDelete("{id}/hard")]
-    public async Task<ActionResult> HardDelete(int id)
-    {
-        await _subscriptionService.HardDeleteAsync(id);
-        return NoContent();
-    }
-
-    // API kiểm tra có thể đăng tin được không
-    [HttpGet("{subscriptionId}/can-post-job")]
-    public async Task<ActionResult<bool>> CanPostJob(int subscriptionId)
-    {
-        var canPost = await _subscriptionService.CanPostJobAsync(subscriptionId);
-        return Ok(canPost);
-    }
-
-    // API mua gói mới, forceReplace = true tự hủy gói cũ
-    [HttpPost("purchase")]
-    public async Task<ActionResult<SubscriptionModel>> Purchase([FromBody] CreateSubscriptionModel dto, [FromQuery] bool forceReplace = false)
-    {
-        var result = await _subscriptionService.PurchaseSubscriptionAsync(dto, forceReplace);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        // Xóa cứng subscription (chỉ khi không có tin đăng liên quan)
+        [HttpDelete("{id}/employer/{employerId}")]
+        public async Task<IActionResult> HardDelete(int id, int employerId)
+        {
+            try
+            {
+                var result = await _subscriptionService.HardDeleteAsync(id, employerId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

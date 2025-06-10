@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 public class AdvertisementService : IAdvertisementService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IGenericRepo<Advertisement> _adRepo;
     private readonly IMapper _mapper;
 
     public AdvertisementService(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
-        _adRepo = _unitOfWork.GetRepository<Advertisement>();
         _mapper = mapper;
     }
 
@@ -28,125 +26,210 @@ public class AdvertisementService : IAdvertisementService
         bool expiredByDate = entity.EndDate < now;
         bool expiredByImpressions = entity.MaxImpressions.HasValue && entity.CurrentImpressions >= entity.MaxImpressions.Value;
 
+        // Nếu hết hạn theo thời gian hoặc lượt hiển thị, cập nhật trạng thái quảng cáo thành EXPIRED
         if ((expiredByDate || expiredByImpressions) && entity.AdStatus != "EXPIRED")
         {
             entity.AdStatus = "EXPIRED";
-            await _adRepo.Update(entity);
+            await _unitOfWork.GetRepository<Advertisement>().Update(entity);
             await _unitOfWork.SaveChangesAsync();
         }
     }
 
-    public async Task<List<AdvertisementModel>> GetAllAsync()
+    /// <summary>
+    /// Lấy tất cả quảng cáo của một employer, bao gồm kiểm tra trạng thái hết hạn.
+    /// </summary>
+    public async Task<List<AdvertisementModel>> GetAllByEmployerAsync(int employerId)
     {
-        var list = await _adRepo.GetAllAsync();
-        foreach (var entity in list)
-        {
-            await CheckAndUpdateStatusAsync(entity);
-        }
-        list = await _adRepo.GetAllAsync();
-        return _mapper.Map<List<AdvertisementModel>>(list);
-    }
-
-    public async Task<List<AdvertisementModel>> GetAllActiveAsync()
-    {
+        var repo = _unitOfWork.GetRepository<Advertisement>();
         var now = DateTime.UtcNow;
-        var list = await _adRepo.GetAllAsync(ad =>
+
+        // Lấy tất cả quảng cáo của employer không bị xóa
+        var list = await repo.GetAllAsync(ad =>
+            ad.EmployerId == employerId &&
+            !ad.IsDeleted);
+
+        // Cập nhật trạng thái hết hạn cho từng quảng cáo
+        foreach (var entity in list)
+        {
+            await CheckAndUpdateStatusAsync(entity);
+        }
+
+        // Lấy lại danh sách đã cập nhật trạng thái
+        list = await repo.GetAllAsync(ad =>
+            ad.EmployerId == employerId &&
+            !ad.IsDeleted);
+
+        return _mapper.Map<List<AdvertisementModel>>(list);
+    }
+
+    /// <summary>
+    /// Lấy tất cả quảng cáo đang active và còn hạn của employer
+    /// </summary>
+    public async Task<List<AdvertisementModel>> GetAllActiveByEmployerAsync(int employerId)
+    {
+        var repo = _unitOfWork.GetRepository<Advertisement>();
+        var now = DateTime.UtcNow;
+
+        var list = await repo.GetAllAsync(ad =>
+            ad.EmployerId == employerId &&
             ad.AdStatus == "ACTIVE" &&
             ad.StartDate <= now &&
-            ad.EndDate >= now);
+            ad.EndDate >= now &&
+            !ad.IsDeleted);
 
         foreach (var entity in list)
         {
             await CheckAndUpdateStatusAsync(entity);
         }
 
-        list = await _adRepo.GetAllAsync(ad =>
+        list = await repo.GetAllAsync(ad =>
+            ad.EmployerId == employerId &&
             ad.AdStatus == "ACTIVE" &&
             ad.StartDate <= now &&
-            ad.EndDate >= now);
+            ad.EndDate >= now &&
+            !ad.IsDeleted);
 
         return _mapper.Map<List<AdvertisementModel>>(list);
     }
 
-    public async Task<AdvertisementModel> GetByIdAsync(int id)
+    /// <summary>
+    /// Lấy quảng cáo theo Id và kiểm tra thuộc về employer
+    /// </summary>
+    public async Task<AdvertisementModel> GetByIdAsync(int id, int employerId)
     {
-        var entity = await _adRepo.GetByIdAsync(id);
-        if (entity == null) throw new KeyNotFoundException("Advertisement not found.");
+        var repo = _unitOfWork.GetRepository<Advertisement>();
+        var entity = await repo.GetByIdAsync(id);
+
+        if (entity == null)
+            throw new KeyNotFoundException("Advertisement not found.");
+
+        if (entity.EmployerId != employerId)
+            throw new UnauthorizedAccessException("Access denied.");
 
         await CheckAndUpdateStatusAsync(entity);
+
         return _mapper.Map<AdvertisementModel>(entity);
     }
 
+    /// <summary>
+    /// Tạo quảng cáo mới cho employer
+    /// </summary>
     public async Task<AdvertisementModel> CreateAsync(CreateAdvertisementModel dto)
     {
         if (dto.StartDate >= dto.EndDate)
             throw new ArgumentException("StartDate must be before EndDate.");
 
+        // Gán trạng thái PENDING mặc định
         var entity = _mapper.Map<Advertisement>(dto);
-        entity.AdStatus = "PENDING"; // Mặc định mới tạo là PENDING
+        entity.AdStatus = "PENDING";
         entity.CurrentImpressions = 0;
 
-        await _adRepo.AddAsync(entity);
+        var repo = _unitOfWork.GetRepository<Advertisement>();
+        await repo.AddAsync(entity);
         await _unitOfWork.SaveChangesAsync();
+
         return _mapper.Map<AdvertisementModel>(entity);
     }
 
-    public async Task<AdvertisementModel> UpdateAsync(int id, UpdateAdvertisementModel dto)
+    /// <summary>
+    /// Cập nhật quảng cáo chỉ khi thuộc về employer
+    /// </summary>
+    public async Task<AdvertisementModel> UpdateAsync(int id, int employerId, UpdateAdvertisementModel dto)
     {
-        var entity = await _adRepo.GetByIdAsync(id);
-        if (entity == null) throw new KeyNotFoundException("Advertisement not found.");
+        var repo = _unitOfWork.GetRepository<Advertisement>();
+        var entity = await repo.GetByIdAsync(id);
+
+        if (entity == null)
+            throw new KeyNotFoundException("Advertisement not found.");
+
+        if (entity.EmployerId != employerId)
+            throw new UnauthorizedAccessException("Access denied.");
 
         if (dto.StartDate >= dto.EndDate)
             throw new ArgumentException("StartDate must be before EndDate.");
 
         _mapper.Map(dto, entity);
-        await _adRepo.Update(entity);
+        await repo.Update(entity);
         await _unitOfWork.SaveChangesAsync();
+
         return _mapper.Map<AdvertisementModel>(entity);
     }
 
-    public async Task<bool> SoftDeleteAsync(int id)
+    /// <summary>
+    /// Soft delete quảng cáo bằng cách chuyển trạng thái thành INACTIVE (chỉ nếu thuộc employer)
+    /// </summary>
+    public async Task<bool> SoftDeleteAsync(int id, int employerId)
     {
-        var entity = await _adRepo.GetByIdAsync(id);
-        if (entity == null) throw new KeyNotFoundException("Advertisement not found.");
+        var repo = _unitOfWork.GetRepository<Advertisement>();
+        var entity = await repo.GetByIdAsync(id);
+
+        if (entity == null)
+            throw new KeyNotFoundException("Advertisement not found.");
+
+        if (entity.EmployerId != employerId)
+            throw new UnauthorizedAccessException("Access denied.");
 
         entity.AdStatus = "INACTIVE";
-        await _adRepo.Update(entity);
+        await repo.Update(entity);
         await _unitOfWork.SaveChangesAsync();
         return true;
     }
 
-    public async Task<bool> RestoreAsync(int id)
+    /// <summary>
+    /// Khôi phục quảng cáo (chỉ nếu thuộc employer)
+    /// </summary>
+    public async Task<bool> RestoreAsync(int id, int employerId)
     {
-        var entity = await _adRepo.GetByIdAsync(id);
-        if (entity == null) throw new KeyNotFoundException("Advertisement not found.");
+        var repo = _unitOfWork.GetRepository<Advertisement>();
+        var entity = await repo.GetByIdAsync(id);
+
+        if (entity == null)
+            throw new KeyNotFoundException("Advertisement not found.");
+
+        if (entity.EmployerId != employerId)
+            throw new UnauthorizedAccessException("Access denied.");
 
         entity.AdStatus = "ACTIVE";
-        await _adRepo.Update(entity);
+        await repo.Update(entity);
         await _unitOfWork.SaveChangesAsync();
         return true;
     }
 
-    public async Task<bool> HardDeleteAsync(int id)
+    /// <summary>
+    /// Xóa cứng quảng cáo (chỉ nếu thuộc employer)
+    /// TODO: Cần kiểm tra ràng buộc FK nếu có
+    /// </summary>
+    public async Task<bool> HardDeleteAsync(int id, int employerId)
     {
-        var entity = await _adRepo.GetByIdAsync(id);
-        if (entity == null) throw new KeyNotFoundException("Advertisement not found.");
+        var repo = _unitOfWork.GetRepository<Advertisement>();
+        var entity = await repo.GetByIdAsync(id);
 
-        // TODO: Kiểm tra ràng buộc FK nếu cần, vd: payment, click logs, etc.
+        if (entity == null)
+            throw new KeyNotFoundException("Advertisement not found.");
 
-        await _adRepo.HardDelete(ad => ad.Id == id);
+        if (entity.EmployerId != employerId)
+            throw new UnauthorizedAccessException("Access denied.");
+
+        // TODO: Kiểm tra ràng buộc FK với các bảng khác nếu có
+
+        await repo.HardDelete(ad => ad.Id == id);
         await _unitOfWork.SaveChangesAsync();
         return true;
     }
 
-    // Tăng lượt hiển thị quảng cáo
+    /// <summary>
+    /// Tăng lượt hiển thị quảng cáo, cập nhật trạng thái nếu đạt max
+    /// </summary>
     public async Task<bool> IncrementImpressionAsync(int id)
     {
-        var entity = await _adRepo.GetByIdAsync(id);
-        if (entity == null) throw new KeyNotFoundException("Advertisement not found.");
+        var repo = _unitOfWork.GetRepository<Advertisement>();
+        var entity = await repo.GetByIdAsync(id);
+
+        if (entity == null)
+            throw new KeyNotFoundException("Advertisement not found.");
 
         entity.CurrentImpressions++;
-        await _adRepo.Update(entity);
+        await repo.Update(entity);
         await _unitOfWork.SaveChangesAsync();
 
         await CheckAndUpdateStatusAsync(entity);
