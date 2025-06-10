@@ -1,4 +1,4 @@
-
+﻿
 using dotenv.net;
 using innosphere_be.Configurations;
 using innosphere_be.Mappings;
@@ -16,7 +16,10 @@ namespace innosphere_be
             if (File.Exists(".env"))
             {
                 DotEnv.Load(new DotEnvOptions(envFilePaths: new[] { ".env" }));
+                Console.WriteLine($"GOOGLE_CLIENT_ID: {Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")}");
+                Console.WriteLine($"GOOGLE_CLIENT_SECRET: {Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")}");
             }
+
 
             //set up routing
             builder.Services.AddRouting(options => options.LowercaseUrls = true);

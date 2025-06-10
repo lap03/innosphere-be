@@ -35,6 +35,9 @@ namespace Repository.Data
         public DbSet<WorkerRatingCriteria> WorkerRatingCriterias { get; set; }
         public DbSet<RatingCriteria> RatingCriterias { get; set; }
 
+        public DbSet<EmailOtp> EmailOtps { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -11,6 +11,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Google.Apis.Auth;
+using Repository.Interfaces;
 
 namespace Service.Services
 {
@@ -18,17 +19,19 @@ namespace Service.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
 
-        public AuthService(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IInitService initService, IConfiguration configuration, IEmailService emailService, ILogger<AuthService> logger)
+        public AuthService(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IInitService initService, IConfiguration configuration, IEmailService emailService, ILogger<AuthService> logger, IUnitOfWork unitOfWork)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _emailService = emailService;
             _configuration = configuration;
             _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<JwtModel> LoginAsync(LoginModel model)
@@ -121,76 +124,26 @@ namespace Service.Services
 
         public async Task<IdentityResult> RegisterWorkerAsync(CancellationToken cancellationToken, User user)
         {
-
             var result = await _userManager.CreateAsync(user, user.PasswordHash);
-
             if (!result.Succeeded)
-            {
                 throw new Exception($"Failed to create user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-            }
 
             await AssignRoleAsync(user, RolesHelper.Worker);
 
-            // Gửi OTP xác thực email
-            var otp = await _userManager.GenerateUserTokenAsync(user, "SixDigitOTP", "EmailConfirmation");
-
-
-            var subject = "worker Email Verification OTP";
-            var body = $"Your OTP code for worker is: <b>{otp}</b>. This code is valid for 1 minute.";
-
-            try
-            {
-                await _emailService.SendMailAsync(cancellationToken, new EmailModel
-                {
-                    To = user.Email,
-                    Subject = subject,
-                    Body = body
-                });
-                _logger.LogInformation("Sent OTP to {Email} (worker) at {Time}", user.Email, DateTime.UtcNow);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send OTP email to {Email} (worker)", user.Email);
-                throw new Exception("Failed to send OTP email. Please try again later.");
-            }
+            await GenerateAndSendOtpAsync(user.Email, cancellationToken);
 
             return result;
         }
 
         public async Task<IdentityResult> RegisterEmployerAsync(CancellationToken cancellationToken, User user)
         {
-
             var result = await _userManager.CreateAsync(user, user.PasswordHash);
-
             if (!result.Succeeded)
-            {
                 throw new Exception($"Failed to create user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-            }
 
             await AssignRoleAsync(user, RolesHelper.Employer);
 
-            // Gửi OTP xác thực email
-            var otp = await _userManager.GenerateUserTokenAsync(user, "SixDigitOTP", "EmailConfirmation");
-
-
-            var subject = "employer Email Verification OTP";
-            var body = $"Your OTP code for employer is: <b>{otp}</b>. This code is valid for 1 minute.";
-
-            try
-            {
-                await _emailService.SendMailAsync(cancellationToken, new EmailModel
-                {
-                    To = user.Email,
-                    Subject = subject,
-                    Body = body
-                });
-                _logger.LogInformation("Sent OTP to {Email} (employer) at {Time}", user.Email, DateTime.UtcNow);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send OTP email to {Email} (employer)", user.Email);
-                throw new Exception("Failed to send OTP email. Please try again later.");
-            }
+            await GenerateAndSendOtpAsync(user.Email, cancellationToken);
 
             return result;
         }
@@ -208,28 +161,38 @@ namespace Service.Services
         public async Task<bool> SendForgotPasswordOtpAsync(string email, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByEmailAsync(email);
-
-            if (user == null || user.EmailConfirmed)
+            if (user == null || !user.EmailConfirmed)
                 return false;
 
-            var otp = await _userManager.GenerateUserTokenAsync(user, "SixDigitOTP", "ForgotPassword");
+            var otp = new Random().Next(100000, 999999).ToString();
+            var expiredAt = DateTime.UtcNow.AddMinutes(5);
+
+            var emailOtpRepo = _unitOfWork.GetRepository<EmailOtp>();
+            var oldOtps = (await emailOtpRepo.GetAllAsync(x => x.Email == email && !x.IsUsed && x.Purpose == "ForgotPassword")).ToList();
+            if (oldOtps.Any())
+                await emailOtpRepo.HardDeleteRange(oldOtps);
+
+            var newOtp = new EmailOtp
+            {
+                Email = email,
+                Otp = otp,
+                ExpiredAt = expiredAt,
+                IsUsed = false,
+                Purpose = "ForgotPassword"
+            };
+            await emailOtpRepo.AddAsync(newOtp);
+            await _unitOfWork.SaveChangesAsync();
+
             var subject = "Forgot Password OTP";
-            var body = $"Your OTP code for password reset is: <b>{otp}</b>. This code is valid for 1 minute.";
+            var body = $"Your OTP code for password reset is: <b>{otp}</b>. This code is valid for 5 minutes.";
+            await _emailService.SendMailAsync(cancellationToken, new EmailModel
+            {
+                To = email,
+                Subject = subject,
+                Body = body
+            });
 
-            try
-            {
-                await _emailService.SendMailAsync(cancellationToken, new EmailModel
-                {
-                    To = user.Email,
-                    Subject = subject,
-                    Body = body
-                });
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return true;
         }
 
         public async Task<bool> ResendEmailOtpAsync(string email, CancellationToken cancellationToken)
@@ -238,53 +201,33 @@ namespace Service.Services
             if (user == null || user.EmailConfirmed)
                 return false;
 
-            var otp = await _userManager.GenerateUserTokenAsync(user, "SixDigitOTP", "EmailConfirmation");
-            var subject = "Resend Email Verification OTP";
-            var body = $"Your new OTP code is: <b>{otp}</b>. This code is valid for 1 minute.";
-            try
-            {
-                await _emailService.SendMailAsync(cancellationToken, new EmailModel
-                {
-                    To = user.Email,
-                    Subject = subject,
-                    Body = body
-                });
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            await GenerateAndSendOtpAsync(email, cancellationToken);
+            return true;
         }
 
         public async Task<bool> VerifyEmailOtpAsync(string email, string otp)
         {
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
-            {
-                _logger.LogWarning("OTP verification failed: user {Email} not found", email);
-                return false;
-            }
+                throw new KeyNotFoundException("User not found");
 
             if (user.EmailConfirmed)
-            {
-                _logger.LogInformation("OTP verification: user {Email} already confirmed", email);
-                return true; // hoặc return false nếu muốn báo lỗi đã xác thực
-            }
+                return true;
 
-            var isValid = await _userManager.VerifyUserTokenAsync(
-                user, "SixDigitOTP", "EmailConfirmation", otp);
+            var emailOtpRepo = _unitOfWork.GetRepository<EmailOtp>();
+            var otpRecords = await emailOtpRepo.GetAllAsync(x =>
+                x.Email == email && x.Otp == otp && !x.IsUsed && x.ExpiredAt > DateTime.UtcNow);
+            var otpRecord = otpRecords.FirstOrDefault();
 
-            if (!isValid)
-            {
-                _logger.LogWarning("OTP verification failed for {Email} at {Time}", email, DateTime.UtcNow);
-                return false;
-            }
+            if (otpRecord == null)
+                throw new UnauthorizedAccessException("Invalid or expired OTP");
 
+            otpRecord.IsUsed = true;
+            await emailOtpRepo.Update(otpRecord);
             user.EmailConfirmed = true;
             await _userManager.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("OTP verified and email confirmed for {Email} at {Time}", email, DateTime.UtcNow);
             return true;
         }
 
@@ -294,12 +237,21 @@ namespace Service.Services
             if (user == null || !user.EmailConfirmed)
                 return false;
 
-            var isValid = await _userManager.VerifyUserTokenAsync(user, "SixDigitOTP", "ForgotPassword", otp);
-            if (!isValid)
+            var emailOtpRepo = _unitOfWork.GetRepository<EmailOtp>();
+            var otpRecords = await emailOtpRepo.GetAllAsync(x =>
+                x.Email == email && x.Otp == otp && !x.IsUsed && x.ExpiredAt > DateTime.UtcNow && x.Purpose == "ForgotPassword");
+            var otpRecord = otpRecords.FirstOrDefault();
+
+            if (otpRecord == null)
                 return false;
+
+            otpRecord.IsUsed = true;
+            await emailOtpRepo.Update(otpRecord);
 
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
             var result = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+            await _unitOfWork.SaveChangesAsync();
+
             return result.Succeeded;
         }
 
@@ -433,6 +385,43 @@ namespace Service.Services
                 await _roleManager.CreateAsync(new IdentityRole(roleName));
             }
             await _userManager.AddToRoleAsync(user, roleName);
+        }
+
+        private async Task<string> GenerateAndSendOtpAsync(string email, CancellationToken cancellationToken)
+        {
+            var otp = new Random().Next(100000, 999999).ToString();
+            var expiredAt = DateTime.UtcNow.AddMinutes(5);
+
+            // Xoá các OTP cũ chưa dùng
+            var emailOtpRepo = _unitOfWork.GetRepository<EmailOtp>();
+            var oldOtps = (await emailOtpRepo.GetAllAsync(x => x.Email == email && !x.IsUsed)).ToList();
+            if (oldOtps.Any())
+            {
+                await emailOtpRepo.HardDeleteRange(oldOtps);
+            }
+
+            // Lưu OTP mới
+            var newOtp = new EmailOtp
+            {
+                Email = email,
+                Otp = otp,
+                ExpiredAt = expiredAt,
+                IsUsed = false
+            };
+            await emailOtpRepo.AddAsync(newOtp);
+            await _unitOfWork.SaveChangesAsync();
+
+            // Gửi email
+            var subject = "Your Email Verification OTP";
+            var body = $"Your OTP code is: <b>{otp}</b>. This code is valid for 5 minutes.";
+            await _emailService.SendMailAsync(cancellationToken, new EmailModel
+            {
+                To = email,
+                Subject = subject,
+                Body = body
+            });
+
+            return otp;
         }
     }
 }

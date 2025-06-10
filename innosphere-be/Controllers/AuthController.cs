@@ -1,6 +1,7 @@
 ﻿using innosphere_be.Models.Requests.AuthRequest;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Repository.Entities;
 using Service.Interfaces;
 using Service.Models.AuthModels;
@@ -119,12 +120,11 @@ namespace innosphere_be.Controllers
             return Ok(new { message = "OTP has been sent to your email. Please check your inbox." });
         }
 
-
         [HttpPost("resend-email-otp")]
         [AllowAnonymous]
-        public async Task<IActionResult> ResendEmailOtp([FromBody] VerifyEmailOtpRequest model, CancellationToken cancellationToken)
+        public async Task<IActionResult> ResendEmailOtp([FromQuery] string email, CancellationToken cancellationToken)
         {
-            var result = await _authService.ResendEmailOtpAsync(model.Email, cancellationToken);
+            var result = await _authService.ResendEmailOtpAsync(email, cancellationToken);
             if (!result)
                 return BadRequest(new { message = "Cannot resend OTP. Email may not exist or is already confirmed." });
 
@@ -136,9 +136,6 @@ namespace innosphere_be.Controllers
         public async Task<IActionResult> VerifyEmailOtp([FromBody] VerifyEmailOtpRequest model)
         {
             var result = await _authService.VerifyEmailOtpAsync(model.Email, model.Otp);
-            if (!result)
-                return BadRequest(new { message = "Invalid or expired OTP" });
-
             return Ok(new { message = "Email verified successfully" });
         }
 
