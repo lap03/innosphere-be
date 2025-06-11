@@ -79,6 +79,7 @@ namespace innosphere_be.Configurations
             services.AddScoped<IRatingCriteriaService, RatingCriteriaService>();
             services.AddScoped<IJobApplicationService, JobApplicationService>();
             services.AddScoped<IBusinessTypeService, BusinessTypeService>();
+            services.AddScoped<IUserService, UserService>();
         }
 
         public static void SetupJWT(this IServiceCollection services, IConfiguration configuration)
