@@ -18,6 +18,20 @@ namespace Repository.Entities
         [ForeignKey("BusinessType")]
         public int BusinessTypeId { get; set; }
 
+        [StringLength(100, ErrorMessage = "Company size cannot exceed 100 characters.")]
+        public string? CompanySize { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime? DateOfIncorporation { get; set; }
+        [StringLength(512, ErrorMessage = "Company logo URL cannot exceed 512 characters.")]
+        public string? CompanyLogoUrl { get; set; }
+
+        [StringLength(500, ErrorMessage = "Company website URL cannot exceed 500 characters.")]
+        public string? CompanyWebsite { get; set; }
+
+        [StringLength(500, ErrorMessage = "Company cover URL cannot exceed 500 characters.")]
+        public string? CompanyCoverUrl { get; set; }
+
         [StringLength(255, ErrorMessage = "Address cannot exceed 255 characters.")]
         public string? CompanyAddress { get; set; }
 

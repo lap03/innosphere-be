@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Service.Interfaces;
 using Service.Models.RatingCriteriaModels;
-using Service.Services;
 
 namespace innosphere_be.Controllers
 {

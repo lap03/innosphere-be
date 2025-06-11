@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Repository.Entities;
 using Repository.Interfaces;
+using Service.Interfaces;
 using Service.Models.RatingCriteriaModels;
 using System;
 using System.Collections.Generic;

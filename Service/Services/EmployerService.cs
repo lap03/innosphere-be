@@ -71,8 +71,23 @@ namespace Service.Services
             employer.UserId = userId;
             employer.BusinessTypeId = businessTypeId;
             employer.CreatedAt = DateTime.UtcNow;
+
             await repo.AddAsync(employer);
             await _unitOfWork.SaveChangesAsync();
+
+            // Xử lý SocialLinks (nếu có)
+            if (request.SocialLinks != null && request.SocialLinks.Count > 0)
+            {
+                var socialRepo = _unitOfWork.GetRepository<SocialLink>();
+                foreach (var link in request.SocialLinks)
+                {
+                    var entity = _mapper.Map<SocialLink>(link);
+                    entity.UserId = userId;
+                    await socialRepo.AddAsync(entity);
+                }
+                await _unitOfWork.SaveChangesAsync();
+            }
+
             return await GetProfileAsync(userId);
         }
 
@@ -123,6 +138,24 @@ namespace Service.Services
             employer.BusinessTypeId = businessTypeId;
             employer.UpdatedAt = DateTime.UtcNow;
             await repo.Update(employer);
+            // Xử lý SocialLinks
+            var socialRepo = _unitOfWork.GetRepository<SocialLink>();
+            var oldLinks = await socialRepo.GetAllAsync(sl => sl.UserId == userId && !sl.IsDeleted);
+
+            foreach (var oldLink in oldLinks)
+            {
+                await socialRepo.SoftDelete(oldLink);
+            }
+
+            if (request.SocialLinks != null && request.SocialLinks.Count > 0)
+            {
+                foreach (var link in request.SocialLinks)
+                {
+                    var entity = _mapper.Map<SocialLink>(link);
+                    entity.UserId = userId;
+                    await socialRepo.AddAsync(entity);
+                }
+            }
             await _unitOfWork.SaveChangesAsync();
             return await GetProfileAsync(userId);
         }

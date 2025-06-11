@@ -48,8 +48,21 @@ namespace Service.Services
                 worker.UserId = userId;
                 worker.CreatedAt = DateTime.UtcNow; // Cập nhật thời gian tạo
                 worker.VerificationStatus = "PENDING";
+
                 await repo.AddAsync(worker);
                 await _unitOfWork.SaveChangesAsync();
+                // Xử lý SocialLinks (nếu có)
+                if (request.SocialLinks != null && request.SocialLinks.Count > 0)
+                {
+                    var socialRepo = _unitOfWork.GetRepository<SocialLink>();
+                    foreach (var link in request.SocialLinks)
+                    {
+                        var entity = _mapper.Map<SocialLink>(link);
+                        entity.UserId = userId;
+                        await socialRepo.AddAsync(entity);
+                    }
+                    await _unitOfWork.SaveChangesAsync();
+                }
                 return await GetProfileAsync(userId);
             }
             catch (Exception)
@@ -81,6 +94,27 @@ namespace Service.Services
 
             worker.UpdatedAt = DateTime.UtcNow;
             await workerRepo.Update(worker);
+            // Xử lý SocialLinks
+            var socialRepo = _unitOfWork.GetRepository<SocialLink>();
+            var oldLinks = await socialRepo.GetAllAsync(sl => sl.UserId == userId && !sl.IsDeleted);
+
+            // SoftDelete các link cũ
+            foreach (var oldLink in oldLinks)
+            {
+                await socialRepo.SoftDelete(oldLink);
+            }
+
+            // Insert lại các link mới
+            if (model.SocialLinks != null && model.SocialLinks.Count > 0)
+            {
+                foreach (var link in model.SocialLinks)
+                {
+                    var entity = _mapper.Map<SocialLink>(link);
+                    entity.UserId = userId;
+                    await socialRepo.AddAsync(entity);
+                }
+            }
+
             await _unitOfWork.SaveChangesAsync();
 
             return await GetProfileAsync(userId);

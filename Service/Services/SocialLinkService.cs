@@ -41,6 +41,13 @@ namespace Service.Services
             if (entity == null) throw new KeyNotFoundException("Social link not found.");
             return _mapper.Map<SocialLinkModel>(entity);
         }
+        //FE có thể gọi /sociallinks/user/{userId} → lấy List các SocialLink của User.
+        public async Task<List<SocialLinkModel>> GetByUserIdAsync(string userId)
+        {
+            var list = await _repo.GetAllAsync(sl => sl.UserId == userId && !sl.IsDeleted);
+            return _mapper.Map<List<SocialLinkModel>>(list);
+        }
+
 
         public async Task<SocialLinkModel> CreateAsync(CreateSocialLinkModel dto)
         {
