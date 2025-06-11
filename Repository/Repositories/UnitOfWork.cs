@@ -42,7 +42,7 @@ namespace Repository.Repositories
                 await transaction.CommitAsync();
                 return result;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
                 throw;

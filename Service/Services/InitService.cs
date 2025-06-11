@@ -286,9 +286,36 @@ namespace Service.Services
             {
                 var subscriptionPackages = new List<SubscriptionPackage>
         {
-            new SubscriptionPackage { PackageName = "Gói Cơ Bản", Description = "Gói đăng tin cơ bản, giới hạn 5 tin đăng", JobPostLimit = 5, Price = 100000, DurationDays = 30, IsDeleted = false, CreatedAt = DateTime.UtcNow },
-            new SubscriptionPackage { PackageName = "Gói Tiêu Chuẩn", Description = "Gói đăng tin tiêu chuẩn, giới hạn 15 tin đăng", JobPostLimit = 15, Price = 250000, DurationDays = 90, IsDeleted = false, CreatedAt = DateTime.UtcNow },
-            new SubscriptionPackage { PackageName = "Gói Cao Cấp", Description = "Gói đăng tin không giới hạn tin đăng", JobPostLimit = int.MaxValue, Price = 500000, DurationDays = 365, IsDeleted = false, CreatedAt = DateTime.UtcNow }
+            new SubscriptionPackage
+            {
+                PackageName = "Gói Cơ Bản",
+                Description = "Gói đăng tin cơ bản, giới hạn 5 tin đăng",
+                JobPostLimit = 5,
+                Price = 100000,
+                DurationDays = 30,
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow
+            },
+            new SubscriptionPackage
+            {
+                PackageName = "Gói Tiêu Chuẩn",
+                Description = "Gói đăng tin tiêu chuẩn, giới hạn 15 tin đăng",
+                JobPostLimit = 15,
+                Price = 250000,
+                DurationDays = 90,
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow
+            },
+            new SubscriptionPackage
+            {
+                PackageName = "Gói Cao Cấp",
+                Description = "Gói đăng tin không giới hạn tin đăng",
+                JobPostLimit = int.MaxValue,
+                Price = 500000,
+                DurationDays = 365,
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow
+            }
         };
 
                 var repo = _unitOfWork.GetRepository<SubscriptionPackage>();
@@ -315,9 +342,39 @@ namespace Service.Services
             {
                 var advertisementPackages = new List<AdvertisementPackage>
         {
-            new AdvertisementPackage { PackageName = "Gói Khởi Đầu", Description = "Gói quảng cáo khởi đầu với 1000 lượt hiển thị", Price = 150000, MaxImpressions = 1000, DurationDays = 30, IsDeleted = false, CreatedAt = DateTime.UtcNow },
-            new AdvertisementPackage { PackageName = "Gói Doanh Nghiệp", Description = "Gói quảng cáo doanh nghiệp với 5000 lượt hiển thị", Price = 400000, MaxImpressions = 5000, DurationDays = 90, IsDeleted = false, CreatedAt = DateTime.UtcNow },
-            new AdvertisementPackage { PackageName = "Gói Doanh Nghiệp Cao Cấp", Description = "Gói quảng cáo không giới hạn lượt hiển thị", Price = 1000000, MaxImpressions = int.MaxValue, DurationDays = 365, IsDeleted = false, CreatedAt = DateTime.UtcNow }
+            new AdvertisementPackage
+            {
+                PackageName = "Gói Khởi Đầu",
+                Description = "Gói quảng cáo khởi đầu với 1000 lượt hiển thị",
+                Price = 150000,
+                MaxImpressions = 1000,
+                DurationDays = 30,
+                AdPosition = "TOP", // Bắt buộc không null
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow
+            },
+            new AdvertisementPackage
+            {
+                PackageName = "Gói Doanh Nghiệp",
+                Description = "Gói quảng cáo doanh nghiệp với 5000 lượt hiển thị",
+                Price = 400000,
+                MaxImpressions = 5000,
+                DurationDays = 90,
+                AdPosition = "MIDDLE", // Bắt buộc không null
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow
+            },
+            new AdvertisementPackage
+            {
+                PackageName = "Gói Doanh Nghiệp Cao Cấp",
+                Description = "Gói quảng cáo không giới hạn lượt hiển thị",
+                Price = 1000000,
+                MaxImpressions = int.MaxValue,
+                DurationDays = 365,
+                AdPosition = "BOTTOM", // Bắt buộc không null
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow
+            }
         };
 
                 var repo = _unitOfWork.GetRepository<AdvertisementPackage>();
@@ -338,5 +395,105 @@ namespace Service.Services
             }
         }
 
+        public async Task SeedEmployerSubscriptionsAndJobPostingsAsync()
+        {
+            // Lấy employer
+            var employerRepo = _unitOfWork.GetRepository<Employer>();
+            var subscriptionRepo = _unitOfWork.GetRepository<Subscription>();
+            var jobPostingRepo = _unitOfWork.GetRepository<JobPosting>();
+
+            var employerUser = await _userManager.FindByEmailAsync("employer@example.com");
+            if (employerUser == null) return;
+
+            var employer = (await employerRepo.GetAllAsync(e => e.UserId == employerUser.Id)).FirstOrDefault();
+            if (employer == null) return;
+
+            // Lấy gói đăng ký (giả sử đã seed 3 gói, lấy theo Id 1,2,3)
+            var now = DateTime.UtcNow;
+            var subscriptions = new List<Subscription>
+            {
+                new Subscription
+                {
+                    EmployerId = employer.Id,
+                    SubscriptionPackageId = 1,
+                    StartDate = now.AddMonths(-2),
+                    EndDate = now.AddMonths(-1),
+                    IsActive = false,
+                    IsDeleted = false,
+                    CreatedAt = now.AddMonths(-2),
+                    AmountPaid = 100000,
+                    PaymentStatus = "PAID"
+                },
+                new Subscription
+                {
+                    EmployerId = employer.Id,
+                    SubscriptionPackageId = 2,
+                    StartDate = now.AddMonths(-1),
+                    EndDate = now.AddDays(-7),
+                    IsActive = false,
+                    IsDeleted = false,
+                    CreatedAt = now.AddMonths(-1),
+                    AmountPaid = 250000,
+                    PaymentStatus = "PAID"
+                },
+                new Subscription
+                {
+                    EmployerId = employer.Id,
+                    SubscriptionPackageId = 3,
+                    StartDate = now.AddDays(-5),
+                    EndDate = now.AddMonths(1),
+                    IsActive = true,
+                    IsDeleted = false,
+                    CreatedAt = now.AddDays(-5),
+                    AmountPaid = 500000,
+                    PaymentStatus = "PAID"
+                }
+            };
+
+            await subscriptionRepo.AddRangeAsync(subscriptions);
+            await _unitOfWork.SaveChangesAsync();
+
+            var activeSubscription = (await subscriptionRepo.GetAllAsync(s =>
+                s.EmployerId == employer.Id && s.IsActive)).FirstOrDefault();
+            if (activeSubscription == null) return;
+
+            // Lấy cityId hợp lệ
+            var cityRepo = _unitOfWork.GetRepository<City>();
+            var city = (await cityRepo.GetAllAsync()).FirstOrDefault();
+            if (city == null) return;
+            int cityId = city.Id;
+
+            // Tạo 10 job posting
+            var jobPostings = new List<JobPosting>();
+            for (int i = 1; i <= 10; i++)
+            {
+                jobPostings.Add(new JobPosting
+                {
+                    EmployerId = employer.Id,
+                    SubscriptionId = activeSubscription.Id,
+                    CityId = cityId,
+                    Title = $"Job Title {i}",
+                    Description = $"Sample job description {i}",
+                    Location = "Sample Location",
+                    StartTime = now.AddDays(i),
+                    EndTime = now.AddDays(i + 7),
+                    HourlyRate = 100000 + i * 10000,
+                    JobType = "FullTime",
+                    Requirements = "Sample requirements",
+                    PostedAt = now.AddDays(-i),
+                    ExpiresAt = now.AddDays(i + 30),
+                    Status = "APPROVED",
+                    IsUrgent = i % 2 == 0,
+                    IsHighlighted = i % 3 == 0,
+                    ViewsCount = i * 10,
+                    ApplicationsCount = i * 2,
+                    IsDeleted = false,
+                    CreatedAt = now.AddDays(-i)
+                });
+            }
+
+            await jobPostingRepo.AddRangeAsync(jobPostings);
+            await _unitOfWork.SaveChangesAsync();
+        }
     }
 }
