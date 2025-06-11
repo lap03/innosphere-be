@@ -20,6 +20,7 @@ using Service.Models.WorkerRatingCriteriaModels;
 using Service.Models.EmployerRatingModels;
 using Service.Models.EmployerRatingCriteriaModels;
 using Service.Models.BusinessTypeModels;
+using Service.Models.UserModels;
 
 namespace innosphere_be.Mappings
 {
@@ -175,6 +176,14 @@ namespace innosphere_be.Mappings
             CreateMap<BusinessType, BusinessTypeModel>().ReverseMap();
             CreateMap<BusinessType, CreateBusinessTypeModel>().ReverseMap();
             CreateMap<BusinessType, UpdateBusinessTypeModel>().ReverseMap();
+
+            // User
+            CreateMap<User, UserModel>().ReverseMap();
+            CreateMap<User, UserWithRoleModel>().ReverseMap();
+            CreateMap<User, UpdateUserModel>()
+                .ForMember(dest => dest.FullName, opt => opt.Condition(src => src.FullName != null))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.Condition(src => src.PhoneNumber != null))
+                .ReverseMap();
         }
     }
 }
