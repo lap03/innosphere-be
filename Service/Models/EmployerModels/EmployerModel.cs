@@ -1,3 +1,4 @@
+using Service.Models.SocialLinkModels;
 using System;
 
 namespace Service.Models.EmployerModels
@@ -24,5 +25,7 @@ namespace Service.Models.EmployerModels
         public bool IsVerified { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public List<SocialLinkModel> SocialLinks { get; set; }
+
     }
 }   

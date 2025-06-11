@@ -19,6 +19,7 @@ using Service.Models.WorkerRatingModels;
 using Service.Models.WorkerRatingCriteriaModels;
 using Service.Models.EmployerRatingModels;
 using Service.Models.EmployerRatingCriteriaModels;
+using Service.Models.BusinessTypeModels;
 
 namespace innosphere_be.Mappings
 {
@@ -36,6 +37,7 @@ namespace innosphere_be.Mappings
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.SocialLinks, opt => opt.MapFrom(src => src.User.SocialLinks))
                 .ReverseMap();
             CreateMap<WorkerEditModel, Worker>()
                 .ForMember(dest => dest.Skills, opt => opt.Condition(src => src.Skills != null))
@@ -62,6 +64,8 @@ namespace innosphere_be.Mappings
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
                 .ForMember(dest => dest.EmployerId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.SocialLinks, opt => opt.MapFrom(src => src.User.SocialLinks))
+
                 .ReverseMap();
 
             CreateMap<EmployerEditModel, User>()
@@ -166,6 +170,11 @@ namespace innosphere_be.Mappings
                 .ForMember(dest => dest.CriteriaName, opt => opt.MapFrom(src => src.RatingCriteria.CriteriaName))
                 .ForMember(dest => dest.CriteriaDescription, opt => opt.MapFrom(src => src.RatingCriteria.Description))
                 .ReverseMap();
+
+            // BusinessType
+            CreateMap<BusinessType, BusinessTypeModel>().ReverseMap();
+            CreateMap<BusinessType, CreateBusinessTypeModel>().ReverseMap();
+            CreateMap<BusinessType, UpdateBusinessTypeModel>().ReverseMap();
         }
     }
 }

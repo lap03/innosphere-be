@@ -1,4 +1,6 @@
 ﻿
+using Service.Models.SocialLinkModels;
+
 namespace Service.Models.EmployerModels
 {
     public class EmployerEditModel
@@ -17,5 +19,8 @@ namespace Service.Models.EmployerModels
         public string? CompanyAddress { get; set; }
         public string? TaxCode { get; set; }
         public string? CompanyDescription { get; set; }
+
+        // Social Links (optional, FE có thể gửi List để tạo/update cùng profile)
+        public List<CreateSocialLinkModel> SocialLinks { get; set; } = new List<CreateSocialLinkModel>();
     }
 }

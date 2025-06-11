@@ -12,5 +12,6 @@ namespace Service.Interfaces
         Task<bool> HardDeleteAsync(int id);
         Task<bool> RestoreAsync(int id);
         Task<SocialLinkModel> UpdateAsync(int id, UpdateSocialLinkModel dto);
+        Task<List<SocialLinkModel>> GetByUserIdAsync(string userId);
     }
 }

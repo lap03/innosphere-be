@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Service.Models.SocialLinkModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,5 +28,7 @@ namespace Service.Models.WorkerModels
         public string VerificationStatus { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public List<SocialLinkModel> SocialLinks { get; set; }
+
     }
 }

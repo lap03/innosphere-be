@@ -1,6 +1,6 @@
 ﻿using Service.Models.RatingCriteriaModels;
 
-namespace Service.Services
+namespace Service.Interfaces
 {
     public interface IRatingCriteriaService
     {
