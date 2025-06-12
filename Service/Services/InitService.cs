@@ -202,12 +202,18 @@ namespace Service.Services
                     CompanyAddress = "Default Address",
                     TaxCode = "123456789",
                     CompanyDescription = "Default employer seeded",
+                    CompanySize = "50-100",
+                    DateOfIncorporation = new DateTime(2010, 1, 1),
+                    CompanyLogoUrl = "https://example.com/logo.png",
+                    CompanyWebsite = "https://example.com",
+                    CompanyCoverUrl = "https://example.com/cover.png",
                     Rating = 0,
                     TotalRatings = 0,
                     IsVerified = false,
                     CreatedAt = DateTime.UtcNow,
                     IsDeleted = false
                 };
+
                 await employerRepo.AddAsync(employer);
                 await _unitOfWork.SaveChangesAsync();
             }
@@ -412,7 +418,7 @@ namespace Service.Services
             var now = DateTime.UtcNow;
             var subscriptions = new List<Subscription>
             {
-                new Subscription
+                 new Subscription
                 {
                     EmployerId = employer.Id,
                     SubscriptionPackageId = 1,
@@ -449,13 +455,34 @@ namespace Service.Services
                     PaymentStatus = "PAID"
                 }
             };
+            // Thay vì AddRangeAsync → add từng cái để đảm bảo EF có Id đúng
+            foreach (var sub in subscriptions)
+            {
+                await subscriptionRepo.AddAsync(sub);
+            }
 
-            await subscriptionRepo.AddRangeAsync(subscriptions);
+            // SaveChanges sau khi add hết → đảm bảo các sub có Id
             await _unitOfWork.SaveChangesAsync();
 
-            var activeSubscription = (await subscriptionRepo.GetAllAsync(s =>
-                s.EmployerId == employer.Id && s.IsActive)).FirstOrDefault();
+            // Lấy lại chính xác activeSubscription (sub có IsActive = true)
+            // Do mình biết sub3 là active → có thể lấy subscriptions.First(s => s.IsActive).Id
+            var activeSubscription = await subscriptionRepo.GetByIdAsync(subscriptions.First(s => s.IsActive).Id);
+
             if (activeSubscription == null) return;
+            //await subscriptionRepo.AddRangeAsync(subscriptions);
+            //await _unitOfWork.SaveChangesAsync();
+
+            //var activeSubscription = (await subscriptionRepo.GetAllAsync(s =>
+            //    s.EmployerId == employer.Id && s.IsActive)).FirstOrDefault();
+            if (activeSubscription == null)
+            {
+                Console.WriteLine("❌ Active subscription not found, skipping JobPostings seeding.");
+                return;
+            }
+            else
+            {
+                Console.WriteLine($"✅ Active subscription found, Id = {activeSubscription.Id}");
+            }
 
             // Lấy cityId hợp lệ
             var cityRepo = _unitOfWork.GetRepository<City>();
