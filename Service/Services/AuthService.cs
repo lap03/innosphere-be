@@ -65,10 +65,18 @@ namespace Service.Services
             };
         }
 
-        public async Task<JwtModel> LoginWithGoogleAsync(string idToken, string type, string? phoneNumber)
+        public async Task<JwtModel> LoginWithGoogleAsync(string idToken, string type, string? fullName, string? phoneNumber)
         {
             // Validate Google token
-            var payload = await GoogleJsonWebSignature.ValidateAsync(idToken);
+            var settings = new GoogleJsonWebSignature.ValidationSettings()
+            {
+                Audience = new List<string> { _configuration["Authentication:Google:ClientId"] }
+            };
+
+            var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
+
+            if (payload == null)
+                return null;
 
             // Map type to role
             string role = type?.Trim().ToLower() switch
@@ -86,7 +94,7 @@ namespace Service.Services
                 {
                     UserName = payload.Email,
                     Email = payload.Email,
-                    FullName = payload.Name,
+                    FullName = fullName,
                     EmailConfirmed = true,
                     PhoneNumber = phoneNumber
                 };

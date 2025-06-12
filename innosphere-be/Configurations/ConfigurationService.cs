@@ -103,26 +103,46 @@ namespace innosphere_be.Configurations
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
                     };
                 })
+                //.AddGoogle(options =>
+                //{
+                //    options.ClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID");
+                //    options.ClientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET");
+                //});
                 .AddGoogle(options =>
-                {
-                    options.ClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID");
-                    options.ClientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET");
-                });
+                 {
+                     options.ClientId = configuration["Authentication:Google:ClientId"];
+                     options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
+                 });
+
 
             services.AddAuthorization();
         }
 
         public static void SetupCors(this IServiceCollection services)
         {
+            //services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowAllOrigins",
+            //        builder =>
+            //        {
+            //            builder.AllowAnyOrigin()
+            //                   .AllowAnyMethod()
+            //                   .AllowAnyHeader();
+            //        });
+            //});
+
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowAllOrigins",
-                    builder =>
-                    {
-                        builder.AllowAnyOrigin()
-                               .AllowAnyMethod()
-                               .AllowAnyHeader();
-                    });
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.WithOrigins(
+                        "http://localhost:3000",
+                        "http://localhost:3001"
+                    )
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+                });
             });
         }
 
