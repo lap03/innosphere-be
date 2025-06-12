@@ -9,7 +9,7 @@ namespace Service.Interfaces
         Task<string> CreateAccessToken(User user);
         Task<string> CreateRefreshToken(User user);
         Task<JwtModel> LoginAsync(LoginModel model);
-        Task<JwtModel> LoginWithGoogleAsync(string idToken, string type, string? phoneNumber);
+        Task<JwtModel> LoginWithGoogleAsync(string idToken, string type, string? fullName, string? phoneNumber);
         Task LogoutAsync(string email);
         Task<IdentityResult> RegisterEmployerAsync(CancellationToken cancellationToken, User user);
         Task<IdentityResult> RegisterWorkerAsync(CancellationToken cancellationToken, User user);

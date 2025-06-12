@@ -33,7 +33,7 @@ namespace innosphere_be.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> LoginGoogle([FromBody] GoogleLoginRequest model)
         {
-            var result = await _authService.LoginWithGoogleAsync(model.IdToken, model.Type, model.PhoneNumber);
+            var result = await _authService.LoginWithGoogleAsync(model.IdToken, model.Type, model.fullName, model.PhoneNumber);
             if (result == null)
                 return Unauthorized(new { message = "Google login failed" });
 
