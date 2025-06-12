@@ -1,0 +1,6 @@
+services:
+  innosphere-be:
+    image: ${DOCKER_REGISTRY-}innospherebe
+    build:
+      context: .
+      dockerfile: innosphere-be/Dockerfile
