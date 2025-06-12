@@ -59,7 +59,7 @@ namespace Repository.Entities
 
         public virtual Employer Employer { get; set; }
         public virtual City City { get; set; }
-
+        public virtual Subscription Subscription { get; set; }
         public virtual ICollection<JobApplication> JobApplications { get; set; }
         public virtual ICollection<JobPostingTag> JobPostingTags { get; set; }
         public virtual ICollection<EmployerRating> EmployerRatings { get; set; }
