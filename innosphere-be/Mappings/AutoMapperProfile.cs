@@ -123,6 +123,8 @@ namespace innosphere_be.Mappings
             CreateMap<CreateJobPostingModel, JobPosting>().ReverseMap();
             CreateMap<JobPosting, JobPostingModel>()
                 .ForMember(dest => dest.JobTags, opt => opt.MapFrom(src => src.JobPostingTags.Select(jpt => jpt.JobTag)))
+                .ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.Employer.CompanyName))
+                .ForMember(dest => dest.CompanyLogoUrl, opt => opt.MapFrom(src => src.Employer.CompanyLogoUrl))
                 .ReverseMap();
 
             CreateMap<JobApplication, JobApplicationModel>()

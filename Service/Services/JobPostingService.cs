@@ -72,7 +72,8 @@ namespace Service.Services
             var result = await repo.GetAllAsync(
                 predicate,
                 j => j.JobPostingTags.Select(jpt => jpt.JobTag),
-                j => j.City
+                j => j.City,
+                j => j.Employer // Thêm dòng này
             );
 
             if (result == null || !result.Any())
@@ -88,7 +89,8 @@ namespace Service.Services
             var repo = _unitOfWork.GetRepository<JobPosting>();
             var entity = await repo.GetSingleByConditionAsynce(
                 j => j.Id == id && !j.IsDeleted,
-                j => j.JobPostingTags.Select(jpt => jpt.JobTag)
+                j => j.JobPostingTags.Select(jpt => jpt.JobTag),
+                j => j.Employer // Thêm dòng này
             );
 
             return entity == null ? null : _mapper.Map<JobPostingModel>(entity);

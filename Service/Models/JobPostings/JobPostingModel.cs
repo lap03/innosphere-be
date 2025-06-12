@@ -9,6 +9,8 @@ namespace Service.Models.JobPostings
     {
         public int Id { get; set; }     
         public int EmployerId { get; set; }
+        public string? CompanyName { get; set; }
+        public string? CompanyLogoUrl { get; set; }
         public int SubscriptionId { get; set; }
         public int? CityId { get; set; }
         public string Title { get; set; }
@@ -27,5 +29,6 @@ namespace Service.Models.JobPostings
         public int ViewsCount { get; set; }
         public int ApplicationsCount { get; set; }
         public List<JobTagModel> JobTags { get; set; }
+        
     }
 }
