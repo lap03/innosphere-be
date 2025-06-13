@@ -26,9 +26,9 @@ namespace Service.Services
             {
                 var cities = new List<City>
                 {
-                    new City {CityName = "Hanoi", Country = "Vietnam", IsDeleted = false, CreatedAt = DateTime.UtcNow },
                     new City {CityName = "Ho Chi Minh City", Country = "Vietnam", IsDeleted = false, CreatedAt = DateTime.UtcNow },
-                    new City {CityName = "Da Nang", Country = "Vietnam", IsDeleted = false, CreatedAt = DateTime.UtcNow }
+                    new City {CityName = "Da Nang", Country = "Vietnam", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                    new City {CityName = "Hanoi", Country = "Vietnam", IsDeleted = false, CreatedAt = DateTime.UtcNow }
                 };
                 var repo = _unitOfWork.GetRepository<City>();
 
@@ -490,36 +490,170 @@ namespace Service.Services
             if (city == null) return;
             int cityId = city.Id;
 
-            // Tạo 10 job posting
-            var jobPostings = new List<JobPosting>();
-            for (int i = 1; i <= 10; i++)
-            {
-                jobPostings.Add(new JobPosting
-                {
-                    EmployerId = employer.Id,
-                    SubscriptionId = activeSubscription.Id,
-                    CityId = cityId,
-                    Title = $"Job Title {i}",
-                    Description = $"Sample job description {i}",
-                    Location = "Sample Location",
-                    StartTime = now.AddDays(i),
-                    EndTime = now.AddDays(i + 7),
-                    HourlyRate = 100000 + i * 10000,
-                    JobType = "FullTime",
-                    Requirements = "Sample requirements",
-                    PostedAt = now.AddDays(-i),
-                    ExpiresAt = now.AddDays(i + 30),
-                    Status = "APPROVED",
-                    IsUrgent = i % 2 == 0,
-                    IsHighlighted = i % 3 == 0,
-                    ViewsCount = i * 10,
-                    ApplicationsCount = i * 2,
-                    IsDeleted = false,
-                    CreatedAt = now.AddDays(-i)
-                });
-            }
+            var jobPostings = new List<JobPosting>
+    {
+        new JobPosting
+        {
+            EmployerId = employer.Id,
+            SubscriptionId = activeSubscription.Id,
+            CityId = 2,
+            Title = "Nhân viên phục vụ bàn",
+            Description = "Phục vụ khách hàng tại quán cà phê", // Giả sử description
+            Location = "Quận 9, HCM",
+            StartTime = DateTime.Parse("7:00"), // Parse từ timeRange
+            EndTime = DateTime.Parse("12:00"),
+            HourlyRate = 27000, // Parse từ "27.000/giờ"
+            JobType = "PartTime", // Giả sử dựa trên timeRange ngắn
+            Requirements = "Thân thiện, nhanh nhẹn", // Giả sử
+            PostedAt = now.AddMinutes(-10), // Từ "10 phút trước"
+            ExpiresAt = now.AddDays(30),
+            Status = "APPROVED",
+            IsUrgent = false, // Giữ nguyên logic mẫu
+            IsHighlighted = false, // Giữ nguyên logic mẫu
+            ViewsCount = 10, // Giả sử
+            ApplicationsCount = 2, // Giả sử
+            IsDeleted = false,
+            CreatedAt = now.AddMinutes(-10),
+            // schedule: "F&B" // TODO: Add BusinessTypeId to JobPosting model to map to BusinessType (e.g., ID of "Dịch vụ")
+        },
+        new JobPosting
+        {
+            EmployerId = employer.Id,
+            SubscriptionId = activeSubscription.Id,
+            CityId = 3,
+            Title = "Nhân viên rửa chén",
+            Description = "Rửa chén bát tại nhà hàng", // Giả sử
+            Location = "Quận 2, HCM",
+            StartTime = DateTime.Parse("18:00"),
+            EndTime = DateTime.Parse("23:00"),
+            HourlyRate = 35000,
+            JobType = "PartTime",
+            Requirements = "Chăm chỉ, sạch sẽ", // Giả sử
+            PostedAt = now.AddMinutes(-12),
+            ExpiresAt = now.AddDays(30),
+            Status = "APPROVED",
+            IsUrgent = true, // Giữ nguyên logic mẫu (i % 2 == 0)
+            IsHighlighted = false, // Giữ nguyên logic mẫu
+            ViewsCount = 20,
+            ApplicationsCount = 4,
+            IsDeleted = false,
+            CreatedAt = now.AddMinutes(-12),
+        },
+        new JobPosting
+        {
+            EmployerId = employer.Id,
+            SubscriptionId = activeSubscription.Id,
+            CityId = cityId,
+            Title = "Nhân viên sắp xếp hàng hoá",
+            Description = "Sắp xếp hàng hóa tại cửa hàng", // Giả sử
+            Location = "Quận 7, HCM",
+            StartTime = DateTime.Parse("13:00"),
+            EndTime = DateTime.Parse("17:00"),
+            HourlyRate = 30000,
+            JobType = "PartTime",
+            Requirements = "Cẩn thận, sức khỏe tốt", // Giả sử
+            PostedAt = now.AddMinutes(-15),
+            ExpiresAt = now.AddDays(30),
+            Status = "APPROVED",
+            IsUrgent = false,
+            IsHighlighted = true, // Giữ nguyên logic mẫu (i % 3 == 0)
+            ViewsCount = 30,
+            ApplicationsCount = 6,
+            IsDeleted = false,
+            CreatedAt = now.AddMinutes(-15),
+        },
+        new JobPosting
+        {
+            EmployerId = employer.Id,
+            SubscriptionId = activeSubscription.Id,
+            CityId = cityId,
+            Title = "Nhân viên phát tờ rơi",
+            Description = "Phát tờ rơi quảng cáo sự kiện", // Giả sử
+            Location = "Quận 1, HCM",
+            StartTime = DateTime.Parse("7:00"),
+            EndTime = DateTime.Parse("11:00"),
+            HourlyRate = 25000,
+            JobType = "PartTime",
+            Requirements = "Năng động, giao tiếp tốt", // Giả sử
+            PostedAt = now.AddMinutes(-24),
+            ExpiresAt = now.AddDays(30),
+            Status = "APPROVED",
+            IsUrgent = true,
+            IsHighlighted = false,
+            ViewsCount = 40,
+            ApplicationsCount = 8,
+            IsDeleted = false,
+            CreatedAt = now.AddMinutes(-24),
+        },
+        new JobPosting
+        {
+            EmployerId = employer.Id,
+            SubscriptionId = activeSubscription.Id,
+            CityId = cityId,
+            Title = "Nhân viên đóng gói đơn hàng",
+            Description = "Đóng gói đơn hàng tại cửa hàng mỹ phẩm", // Giả sử
+            Location = "Quận 9, HCM",
+            StartTime = DateTime.Parse("17:00"),
+            EndTime = DateTime.Parse("22:00"),
+            HourlyRate = 27000,
+            JobType = "FullTime",
+            Requirements = "Cẩn thận, nhanh nhẹn", // Giả sử
+            PostedAt = now.AddMinutes(-26),
+            ExpiresAt = now.AddDays(30),
+            Status = "APPROVED",
+            IsUrgent = false,
+            IsHighlighted = true,
+            ViewsCount = 50,
+            ApplicationsCount = 10,
+            IsDeleted = false,
+            CreatedAt = now.AddMinutes(-26),
+        }
+    };
 
             await jobPostingRepo.AddRangeAsync(jobPostings);
+            await _unitOfWork.SaveChangesAsync();
+
+            //// Gắn JobTag cho các JobPosting mẫu
+            //var jobPostingTagRepo = _unitOfWork.GetRepository<JobPostingTag>();
+            //var jobTagRepo = _unitOfWork.GetRepository<JobTag>();
+
+            //// Lấy lại danh sách JobPosting vừa seed
+            //var allJobPostings = (await jobPostingRepo.GetAllAsync(jp => jp.EmployerId == employer.Id)).ToList();
+
+            //// 1. Gắn 1 tag cho JobPosting đầu tiên (ví dụ: tagId = 1)
+            //if (allJobPostings.Count > 0)
+            //{
+            //    var jobPosting1 = allJobPostings[0];
+            //    var jobTag1 = await jobTagRepo.GetByIdAsync(1);
+            //    if (jobTag1 != null)
+            //    {
+            //        await jobPostingTagRepo.AddAsync(new JobPostingTag
+            //        {
+            //            JobPostingId = jobPosting1.Id,
+            //            JobTagId = jobTag1.Id
+            //        });
+            //    }
+            //}
+
+            //// 2. Gắn nhiều tag cho JobPosting thứ hai (ví dụ: tagId = 2, 3, 4)
+            //if (allJobPostings.Count > 1)
+            //{
+            //    var jobPosting2 = allJobPostings[1];
+            //    var multiTagIds = new List<int> { 2, 3, 4 };
+            //    foreach (var tagId in multiTagIds)
+            //    {
+            //        var jobTag = await jobTagRepo.GetByIdAsync(tagId);
+            //        if (jobTag != null)
+            //        {
+            //            await jobPostingTagRepo.AddAsync(new JobPostingTag
+            //            {
+            //                JobPostingId = jobPosting2.Id,
+            //                JobTagId = jobTag.Id
+            //            });
+            //        }
+            //    }
+            //}
+
             await _unitOfWork.SaveChangesAsync();
         }
     }

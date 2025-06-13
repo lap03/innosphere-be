@@ -3,12 +3,16 @@ using dotenv.net;
 using innosphere_be.Configurations;
 using innosphere_be.Mappings;
 using innosphere_be.MiddleWares;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Repository.Data;
+using Repository.Entities;
 
 namespace innosphere_be
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +70,21 @@ namespace innosphere_be
             app.UseAuthorization();
 
             app.MapControllers();
+
+            await using var scope = app.Services.CreateAsyncScope();
+            var context = scope.ServiceProvider.GetRequiredService<InnoSphereDBContext>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+            try
+            {
+                context.Database.Migrate();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "A problem occurred during migration");
+            }
 
             app.Run();
         }

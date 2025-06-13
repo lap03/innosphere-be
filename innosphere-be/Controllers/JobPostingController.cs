@@ -43,15 +43,7 @@ namespace innosphere_be.Controllers
         // Lấy danh sách bài đăng theo employer
         [HttpGet("employer/{employerId}")]
         [Authorize(Roles = "Employer")]
-        public async Task<IActionResult> GetByEmployer(int employerId)
-        {
-            var result = await _jobPostingService.GetJobPostingsByEmployerAsync(employerId);
-            return Ok(result);
-        }
-
-        // Lấy chi tiết bài đăng
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int employerId, [FromQuery] string? status = null)
+        public async Task<IActionResult> GetByEmployer(int employerId, [FromQuery] string? status = null)
         {
             try
             {
@@ -72,6 +64,25 @@ namespace innosphere_be.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred while retrieving employer job postings", error = ex.Message });
+            }
+        }
+
+        // Lấy chi tiết bài đăng
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            try
+            {
+                var jobPosting = await _jobPostingService.GetJobPostingByIdAsync(id);
+                if (jobPosting == null)
+                {
+                    return NotFound(new { message = "Job posting not found." });
+                }
+                return Ok(jobPosting);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving the job posting.", error = ex.Message });
             }
         }
 
