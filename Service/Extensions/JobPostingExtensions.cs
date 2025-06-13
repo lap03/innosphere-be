@@ -18,6 +18,7 @@ namespace Service.Extensions
                     .ThenInclude(jpt => jpt.JobTag)
                 .Include(j => j.City)
                 .Include(j => j.Employer)
+                    .ThenInclude(e => e.BusinessType)
                 .Where(j => !j.IsDeleted);
         }
 

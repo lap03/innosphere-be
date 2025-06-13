@@ -11,8 +11,11 @@ namespace Service.Models.JobPostings
         public int EmployerId { get; set; }
         public string? CompanyName { get; set; }
         public string? CompanyLogoUrl { get; set; }
+        public int? BusinessTypeId { get; set; }
+        public string? BusinessTypeName { get; set; }
         public int SubscriptionId { get; set; }
         public int? CityId { get; set; }
+        public string? CityName { get; set; }
         public string Title { get; set; }
         public string? Description { get; set; }
         public string Location { get; set; }

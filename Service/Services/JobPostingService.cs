@@ -6,6 +6,7 @@ using Repository.Interfaces;
 using Service.Extensions;
 using Service.Interfaces;
 using Service.Models.JobPostings;
+using Service.Models.JobTagModels;
 using Service.Models.PagedResultModels;
 using System.Linq.Expressions;
 
@@ -73,7 +74,8 @@ namespace Service.Services
                 predicate,
                 j => j.JobPostingTags.Select(jpt => jpt.JobTag),
                 j => j.City,
-                j => j.Employer // Thêm dòng này
+                j => j.Employer,
+                j => j.Employer.BusinessType
             );
 
             if (result == null || !result.Any())
@@ -87,13 +89,35 @@ namespace Service.Services
         public async Task<JobPostingModel?> GetJobPostingByIdAsync(int id)
         {
             var repo = _unitOfWork.GetRepository<JobPosting>();
+            var jobTagRepo = _unitOfWork.GetRepository<JobTag>();
             var entity = await repo.GetSingleByConditionAsynce(
                 j => j.Id == id && !j.IsDeleted,
-                j => j.JobPostingTags.Select(jpt => jpt.JobTag),
-                j => j.Employer // Thêm dòng này
+                j => j.JobPostingTags,
+                j => j.City,
+                j => j.Employer,
+                j => j.Employer.BusinessType
             );
 
-            return entity == null ? null : _mapper.Map<JobPostingModel>(entity);
+            if (entity == null)
+                return null;
+
+            var model = _mapper.Map<JobPostingModel>(entity);
+
+            // Lấy danh sách JobTagId từ JobPostingTags
+            var tagIds = entity.JobPostingTags?.Select(jpt => jpt.JobTagId).ToList() ?? new List<int>();
+
+            // Lấy thông tin JobTag từ repo dựa trên danh sách id
+            if (tagIds.Any())
+            {
+                var jobTags = await jobTagRepo.GetAllAsync(jt => tagIds.Contains(jt.Id));
+                model.JobTags = jobTags.Select(jt => _mapper.Map<JobTagModel>(jt)).ToList();
+            }
+            else
+            {
+                model.JobTags = new List<JobTagModel>();
+            }
+
+            return model;
         }
 
         public async Task<JobPostingModel> CreateJobPostingAsync(CreateJobPostingModel model, List<int> tagIds)
