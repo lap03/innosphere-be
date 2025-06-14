@@ -1,6 +1,42 @@
 services:
   innosphere-be:
-    image: ${DOCKER_REGISTRY-}innospherebe
+    image: innospherebe
+    container_name: innosphere-api
     build:
       context: .
       dockerfile: innosphere-be/Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - server=sqlserver-container
+      - database=InnoSphereDB
+      - port=1433
+      - dbuser=sa
+      - password=YourStrongP@ssword
+    depends_on:
+      - sql-server
+    networks:
+      - innosphere-network
+    restart: on-failure 
+
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-container
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrongP@ssword
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssqldata:/var/opt/mssql
+    networks:
+      - innosphere-network
+
+volumes:
+  mssqldata:
+
+networks:
+  innosphere-network:
+    driver: bridge

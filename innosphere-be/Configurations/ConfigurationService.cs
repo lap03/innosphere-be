@@ -19,8 +19,16 @@ namespace innosphere_be.Configurations
     {
         public static void SetupContextDb(this IServiceCollection services, IConfiguration configuration)
         {
+            var server = configuration["server"] ?? "localhost";
+            var database = configuration["database"] ?? "InnoSphereDB";
+            var port = configuration["port"] ?? "1433";
+            var password = configuration["password"] ?? "12345";
+            var user = configuration["dbuser"] ?? "sa";
+
+            var connectionString = $"Server={server},{port};Database={database};User Id={user};Password={password};TrustServerCertificate=True;";
+
             services.AddDbContext<InnoSphereDBContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
+                options.UseSqlServer(connectionString,
                 options => options.MigrationsAssembly(typeof(InnoSphereDBContext).Assembly.FullName)));
 
             services.AddIdentity<User, IdentityRole>(options =>
