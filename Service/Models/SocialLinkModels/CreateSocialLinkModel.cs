@@ -14,7 +14,7 @@ namespace Service.Models.SocialLinkModels
 
         [Required(ErrorMessage = "Platform is required.")]
         [StringLength(50)]
-        [RegularExpression("^(Facebook|LinkedIn|Twitter|Instagram)$", ErrorMessage = "Invalid social media platform.")]
+        [RegularExpression("^(Facebook|LinkedIn|Twitter|Instagram|Youtube)$", ErrorMessage = "Invalid social media platform.")]
         public string Platform { get; set; }
 
         [Required(ErrorMessage = "URL is required.")]
