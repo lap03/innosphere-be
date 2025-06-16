@@ -61,10 +61,10 @@ namespace Service.Services
         public async Task<IEnumerable<JobPostingModel>> GetJobPostingsByEmployerAsync(int employerId, string? status = null)
         {
             var repo = _unitOfWork.GetRepository<JobPosting>();
+            var jobTagRepo = _unitOfWork.GetRepository<JobTag>();
 
             // Build predicate based on parameters
             Expression<Func<JobPosting, bool>> predicate = j => j.EmployerId == employerId && !j.IsDeleted;
-
             if (!string.IsNullOrEmpty(status))
             {
                 predicate = j => j.EmployerId == employerId && !j.IsDeleted && j.Status == status;
@@ -72,7 +72,7 @@ namespace Service.Services
 
             var result = await repo.GetAllAsync(
                 predicate,
-                j => j.JobPostingTags.Select(jpt => jpt.JobTag),
+                j => j.JobPostingTags,
                 j => j.City,
                 j => j.Employer,
                 j => j.Employer.BusinessType
@@ -83,7 +83,30 @@ namespace Service.Services
                 return Enumerable.Empty<JobPostingModel>();
             }
 
-            return _mapper.Map<IEnumerable<JobPostingModel>>(result);
+            var jobPostingModels = new List<JobPostingModel>();
+
+            foreach (var entity in result)
+            {
+                var model = _mapper.Map<JobPostingModel>(entity);
+
+                // Get JobTagIds from JobPostingTags
+                var tagIds = entity.JobPostingTags?.Select(jpt => jpt.JobTagId).ToList() ?? new List<int>();
+
+                // Get JobTag info from repo based on ids
+                if (tagIds.Any())
+                {
+                    var jobTags = await jobTagRepo.GetAllAsync(jt => tagIds.Contains(jt.Id));
+                    model.JobTags = jobTags.Select(jt => _mapper.Map<JobTagModel>(jt)).ToList();
+                }
+                else
+                {
+                    model.JobTags = new List<JobTagModel>();
+                }
+
+                jobPostingModels.Add(model);
+            }
+
+            return jobPostingModels;
         }
 
         public async Task<JobPostingModel?> GetJobPostingByIdAsync(int id)
@@ -127,9 +150,6 @@ namespace Service.Services
             var subscriptionRepo = _unitOfWork.GetRepository<Subscription>();
             var packageRepo = _unitOfWork.GetRepository<SubscriptionPackage>();
             var jobRepo = _unitOfWork.GetRepository<JobPosting>();
-
-            // Bắt đầu transaction để đảm bảo atomicity (toàn bộ hoặc không có gì)
-            using var transaction = await _unitOfWork.BeginTransactionAsync();
 
             try
             {
@@ -177,15 +197,10 @@ namespace Service.Services
                 }
                 await _unitOfWork.SaveChangesAsync();
 
-                // 6. Commit transaction thành công
-                await transaction.CommitAsync();
-
                 return _mapper.Map<JobPostingModel>(jobPosting);
             }
             catch (Exception)
             {
-                // Nếu có lỗi, rollback transaction
-                await transaction.RollbackAsync();
                 throw;
             }
         }
