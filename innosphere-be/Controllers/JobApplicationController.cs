@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 using Service.Models.JobApplicationModels;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace innosphere_be.Controllers
@@ -24,8 +25,15 @@ namespace innosphere_be.Controllers
         [Authorize(Roles = "Worker")]
         public async Task<IActionResult> Apply([FromBody] CreateJobApplicationModel model)
         {
-            var workerId = int.Parse(User.FindFirst("UserId").Value);
-            var result = await _jobApplicationService.ApplyAsync(model, workerId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not authenticated");
+            }
+
+            // ❌ LỖI: Trước đây ép kiểu int.Parse(userId) => lỗi nếu userId là GUID
+            // ✅ SỬA: Giữ userId dạng string, cập nhật service để nhận string
+            var result = await _jobApplicationService.ApplyAsync(model, userId); // SỬA
             return Ok(result);
         }
 
@@ -34,8 +42,15 @@ namespace innosphere_be.Controllers
         [Authorize(Roles = "Employer")]
         public async Task<IActionResult> GetByEmployer([FromQuery] int? jobPostingId)
         {
-            var employerId = int.Parse(User.FindFirst("UserId").Value);
-            var results = await _jobApplicationService.GetByEmployerAsync(employerId, jobPostingId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not authenticated");
+            }
+
+            // ❌ LỖI: int.Parse(userId) lỗi nếu userId là GUID
+            // ✅ SỬA: Truyền userId dạng string
+            var results = await _jobApplicationService.GetByEmployerAsync(userId, jobPostingId); // SỬA
             return Ok(results);
         }
 
@@ -44,8 +59,14 @@ namespace innosphere_be.Controllers
         [Authorize(Roles = "Worker")]
         public async Task<IActionResult> GetByWorker()
         {
-            var workerId = int.Parse(User.FindFirst("UserId").Value);
-            var results = await _jobApplicationService.GetByWorkerAsync(workerId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not authenticated");
+            }
+
+            // ✅ SỬA: Truyền userId dạng string
+            var results = await _jobApplicationService.GetByWorkerAsync(userId); // SỬA
             return Ok(results);
         }
 
@@ -65,7 +86,6 @@ namespace innosphere_be.Controllers
             var success = await _jobApplicationService.UpdateStatusAsync(id, model);
             if (!success)
                 return NotFound();
-
             return NoContent();
         }
 
@@ -74,11 +94,16 @@ namespace innosphere_be.Controllers
         [Authorize(Roles = "Worker")]
         public async Task<IActionResult> CancelApplication(int id)
         {
-            var workerId = int.Parse(User.FindFirst("UserId").Value);
-            var success = await _jobApplicationService.CancelApplicationAsync(id, workerId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not authenticated");
+            }
+
+            // ✅ SỬA: Truyền userId dạng string
+            var success = await _jobApplicationService.CancelApplicationAsync(id, userId); // SỬA
             if (!success)
                 return NotFound();
-
             return NoContent();
         }
     }
