@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Service.Interfaces;
 using Service.Models.EmployerRatingModels;
 using Service.Services;
 
@@ -8,9 +9,9 @@ namespace innosphere_be.Controllers
     [Route("api/[controller]")]
     public class EmployerRatingController : ControllerBase
     {
-        private readonly EmployerRatingService _service;
+        private readonly IEmployerRatingService _service;
 
-        public EmployerRatingController(EmployerRatingService service)
+        public EmployerRatingController(IEmployerRatingService service)
         {
             _service = service;
         }
