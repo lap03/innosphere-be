@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Service.Interfaces;
 using Service.Models.WorkerRatingModels;
-using Service.Services;
 
 namespace innosphere_be.Controllers
 {
@@ -9,9 +9,9 @@ namespace innosphere_be.Controllers
     [Route("api/[controller]")]
     public class WorkerRatingController : ControllerBase
     {
-        private readonly WorkerRatingService _service;
+        private readonly IWorkerRatingService _service;
 
-        public WorkerRatingController(WorkerRatingService service)
+        public WorkerRatingController(IWorkerRatingService service)
         {
             _service = service;
         }

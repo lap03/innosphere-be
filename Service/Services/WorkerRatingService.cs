@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Repository.Entities;
 using Repository.Interfaces;
+using Service.Interfaces;
 using Service.Models.WorkerRatingCriteriaModels;
 using Service.Models.WorkerRatingModels;
 using System;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Service.Services
 {
-    public class WorkerRatingService
+    public class WorkerRatingService : IWorkerRatingService
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
