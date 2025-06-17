@@ -141,7 +141,36 @@ namespace innosphere_be.Mappings
                     src.Resume != null ? src.Resume.Title : string.Empty))
                 // ✅ Lồng jobPosting vào model
                 .ForMember(dest => dest.JobPosting, opt => opt.MapFrom(src => src.JobPosting))
+                // ✅ Map Worker Profile information
+                .ForMember(dest => dest.WorkerProfile, opt => opt.MapFrom(src => src.Worker))
                 .ReverseMap();
+
+            // Worker to WorkerProfileModel mapping for JobApplication responses
+            CreateMap<Worker, WorkerProfileModel>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Skills, opt => opt.MapFrom(src => src.Skills))
+                .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.Bio))
+                .ForMember(dest => dest.Education, opt => opt.MapFrom(src => src.Education))
+                .ForMember(dest => dest.Experience, opt => opt.MapFrom(src => src.Experience))
+                .ForMember(dest => dest.Rating, opt => opt.MapFrom(src => src.Rating))
+                .ForMember(dest => dest.TotalRatings, opt => opt.MapFrom(src => src.TotalRatings))
+                .ForMember(dest => dest.VerificationStatus, opt => opt.MapFrom(src => src.VerificationStatus))
+                .ForMember(dest => dest.IsDeleted, opt => opt.MapFrom(src => src.IsDeleted))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
+                .ForMember(dest => dest.DeletedAt, opt => opt.MapFrom(src => src.DeletedAt))
+                .ForMember(dest => dest.ContactLocation, opt => opt.MapFrom(src => src.ContactLocation))
+                .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth))
+                .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
+                .ForMember(dest => dest.MaritalStatus, opt => opt.MapFrom(src => src.MaritalStatus))
+                .ForMember(dest => dest.Nationality, opt => opt.MapFrom(src => src.Nationality))
+                .ForMember(dest => dest.PersonalWebsite, opt => opt.MapFrom(src => src.PersonalWebsite))
+                // Map User information
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User != null ? src.User.PhoneNumber : string.Empty))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.User != null ? src.User.AvatarUrl : string.Empty))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.User != null ? src.User.Address : string.Empty));
 
             CreateMap<CreateJobApplicationModel, JobApplication>()
                 .ForMember(dest => dest.AppliedAt, opt => opt.Ignore())
@@ -153,7 +182,7 @@ namespace innosphere_be.Mappings
 
             CreateMap<UpdateJobApplicationStatusModel, JobApplication>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
-                
+
             // Resume
             CreateMap<Resume, ResumeModel>().ReverseMap();
             CreateMap<CreateResumeModel, Resume>().ReverseMap();
