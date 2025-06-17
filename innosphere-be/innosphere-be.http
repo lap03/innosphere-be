@@ -1,6 +1,22 @@
 @innosphere_be_HostAddress = http://localhost:5162
+@base_url = https://localhost:7085
 
 GET {{innosphere_be_HostAddress}}/weatherforecast/
 Accept: application/json
+
+###
+
+# Test JobApplication API with enhanced worker profile
+# GET Job Applications for Employer with jobPostingId=2
+GET {{base_url}}/api/jobapplication/employer?jobPostingId=2
+Accept: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+# Test JobApplication API for all jobs for employer
+GET {{base_url}}/api/jobapplication/employer
+Accept: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
 
 ###
