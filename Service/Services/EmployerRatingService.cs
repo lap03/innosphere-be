@@ -49,12 +49,12 @@ namespace Service.Services
             if (!string.Equals(jobApplication.Status, "ACCEPTED", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Job application must be ACCEPTED to rate.");
 
-            // Kiểm tra JobPosting phải COMPLETED
             var jobPosting = jobApplication.JobPosting ?? await _unitOfWork.GetRepository<JobPosting>().GetByIdAsync(jobApplication.JobPostingId);
             if (jobPosting == null)
                 throw new KeyNotFoundException("Job posting not found.");
-            if (!string.Equals(jobPosting.Status, "COMPLETED", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Job posting must be COMPLETED to rate.");
+            if (!string.Equals(jobPosting.Status, "COMPLETED", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(jobPosting.Status, "CLOSED", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Job posting must be COMPLETED or CLOSED to rate.");
 
             if (model.Details == null || !model.Details.Any())
                 throw new ArgumentException("Details are required.");
