@@ -184,18 +184,21 @@ namespace Service.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 // Gán tag cho bài đăng
-                foreach (var tagId in tagIds)
+                if (tagIds != null && tagIds.Any())
                 {
-                    var jobPostingTag = new JobPostingTag
+                    foreach (var tagId in tagIds)
                     {
-                        JobPostingId = jobPosting.Id,
-                        JobTagId = tagId,
-                        CreatedAt = DateTime.UtcNow,
-                        IsDeleted = false
-                    };
-                    await jobPostingTagRepo.AddAsync(jobPostingTag);
+                        var jobPostingTag = new JobPostingTag
+                        {
+                            JobPostingId = jobPosting.Id,
+                            JobTagId = tagId,
+                            CreatedAt = DateTime.UtcNow,
+                            IsDeleted = false
+                        };
+                        await jobPostingTagRepo.AddAsync(jobPostingTag);
+                    }
+                    await _unitOfWork.SaveChangesAsync();
                 }
-                await _unitOfWork.SaveChangesAsync();
 
                 return _mapper.Map<JobPostingModel>(jobPosting);
             }
