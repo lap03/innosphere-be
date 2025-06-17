@@ -25,68 +25,103 @@ namespace innosphere_be.Controllers
         [Authorize(Roles = "Worker")]
         public async Task<IActionResult> Apply([FromBody] CreateJobApplicationModel model)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-            {
                 return Unauthorized("User not authenticated");
+
+            try
+            {
+                var result = await _jobApplicationService.ApplyAsync(model, userId);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"❌ Internal Exception: {ex.Message}\n{ex.InnerException?.Message}\n{ex.StackTrace}");
             }
 
-            // ❌ LỖI: Trước đây ép kiểu int.Parse(userId) => lỗi nếu userId là GUID
-            // ✅ SỬA: Giữ userId dạng string, cập nhật service để nhận string
-            var result = await _jobApplicationService.ApplyAsync(model, userId); // SỬA
-            return Ok(result);
         }
 
-        // Employer xem danh sách đơn ứng tuyển (tùy chọn lọc theo jobPostingId)
+        // Employer xem danh sách đơn ứng tuyển
         [HttpGet("employer")]
         [Authorize(Roles = "Employer")]
         public async Task<IActionResult> GetByEmployer([FromQuery] int? jobPostingId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userName = User.FindFirstValue(ClaimTypes.Name);
             if (string.IsNullOrEmpty(userId))
-            {
                 return Unauthorized("User not authenticated");
-            }
 
-            // ❌ LỖI: int.Parse(userId) lỗi nếu userId là GUID
-            // ✅ SỬA: Truyền userId dạng string
-            var results = await _jobApplicationService.GetByEmployerAsync(userId, jobPostingId); // SỬA
-            return Ok(results);
+            try
+            {
+                var results = await _jobApplicationService.GetByEmployerAsync(userId, jobPostingId);
+                return Ok(new { UserName = userName, Applications = results });
+            }
+            catch
+            {
+                return StatusCode(500, "Failed to load job applications for employer.");
+            }
         }
 
-        // Worker xem danh sách đơn ứng tuyển của mình
+        // Worker xem đơn ứng tuyển của mình
         [HttpGet("worker")]
         [Authorize(Roles = "Worker")]
         public async Task<IActionResult> GetByWorker()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userName = User.FindFirstValue(ClaimTypes.Name);
             if (string.IsNullOrEmpty(userId))
-            {
                 return Unauthorized("User not authenticated");
-            }
 
-            // ✅ SỬA: Truyền userId dạng string
-            var results = await _jobApplicationService.GetByWorkerAsync(userId); // SỬA
-            return Ok(results);
+            try
+            {
+                var results = await _jobApplicationService.GetByWorkerAsync(userId);
+                return Ok(new { UserName = userName, Applications = results });
+            }
+            catch
+            {
+                return StatusCode(500, "Failed to load your job applications.");
+            }
         }
 
         // Lấy chi tiết đơn ứng tuyển
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var result = await _jobApplicationService.GetByIdAsync(id);
-            return Ok(result);
+            try
+            {
+                var result = await _jobApplicationService.GetByIdAsync(id);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Job application not found.");
+            }
         }
 
-        // Employer/Admin cập nhật trạng thái đơn
+        // Employer hoặc Admin cập nhật trạng thái đơn
         [HttpPut("{id}/status")]
         [Authorize(Roles = "Employer,Admin")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateJobApplicationStatusModel model)
         {
-            var success = await _jobApplicationService.UpdateStatusAsync(id, model);
-            if (!success)
-                return NotFound();
-            return NoContent();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var success = await _jobApplicationService.UpdateStatusAsync(id, model);
+                return success ? NoContent() : NotFound();
+            }
+            catch
+            {
+                return StatusCode(500, "Failed to update status.");
+            }
         }
 
         // Worker hủy đơn ứng tuyển
@@ -96,15 +131,21 @@ namespace innosphere_be.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-            {
                 return Unauthorized("User not authenticated");
-            }
 
-            // ✅ SỬA: Truyền userId dạng string
-            var success = await _jobApplicationService.CancelApplicationAsync(id, userId); // SỬA
-            if (!success)
-                return NotFound();
-            return NoContent();
+            try
+            {
+                var success = await _jobApplicationService.CancelApplicationAsync(id, userId);
+                return success ? NoContent() : NotFound();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch
+            {
+                return StatusCode(500, "Failed to cancel application.");
+            }
         }
     }
 }

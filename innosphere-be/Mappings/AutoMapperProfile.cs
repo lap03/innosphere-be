@@ -130,10 +130,17 @@ namespace innosphere_be.Mappings
                 .ForMember(dest => dest.CityName, opt => opt.MapFrom(src => src.City.CityName))
                 .ReverseMap();
 
+            //JobApplication
+            // JobApplication
             CreateMap<JobApplication, JobApplicationModel>()
-                .ForMember(dest => dest.JobTitle, opt => opt.MapFrom(src => src.JobPosting != null ? src.JobPosting.Title : string.Empty))
-                .ForMember(dest => dest.WorkerName, opt => opt.MapFrom(src => src.Worker != null && src.Worker.User != null ? src.Worker.User.FullName : string.Empty))
-                .ForMember(dest => dest.ResumeTitle, opt => opt.MapFrom(src => src.Resume != null ? src.Resume.Title : string.Empty))
+                .ForMember(dest => dest.JobTitle, opt => opt.MapFrom(src =>
+                    src.JobPosting != null ? src.JobPosting.Title : string.Empty))
+                .ForMember(dest => dest.WorkerName, opt => opt.MapFrom(src =>
+                    src.Worker != null && src.Worker.User != null ? src.Worker.User.FullName : string.Empty))
+                .ForMember(dest => dest.ResumeTitle, opt => opt.MapFrom(src =>
+                    src.Resume != null ? src.Resume.Title : string.Empty))
+                // ✅ Lồng jobPosting vào model
+                .ForMember(dest => dest.JobPosting, opt => opt.MapFrom(src => src.JobPosting))
                 .ReverseMap();
 
             CreateMap<CreateJobApplicationModel, JobApplication>()
