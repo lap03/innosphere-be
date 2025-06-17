@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Service.Models.JobPostings;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace Service.Models.JobApplicationModels
     {
         public int Id { get; set; }
         public int JobPostingId { get; set; }
+        public JobPostingModel JobPosting { get; set; }
         public int? ResumeId { get; set; }
         public DateTime AppliedAt { get; set; }
         public string Status { get; set; }
