@@ -157,9 +157,18 @@ namespace Service.Services
         {
             var repo = _unitOfWork.GetRepository<JobApplication>();
 
-            var entity = await repo.GetByIdAsync(id);
+            // Cần Include Worker để tránh NullReferenceException
+            var entity = await repo.GetSingleByConditionAsynce(
+                j => j.Id == id,
+                j => j.Worker,
+                j => j.Worker.User // optional nếu cần thêm thông tin user
+            );
+
             if (entity == null)
                 throw new KeyNotFoundException("Job application not found.");
+
+            if (entity.Worker == null)
+                throw new UnauthorizedAccessException("Worker data not found for this application.");
 
             if (entity.Worker.UserId != userId)
                 throw new UnauthorizedAccessException("You can only cancel your own applications.");
@@ -170,5 +179,6 @@ namespace Service.Services
 
             return true;
         }
+
     }
 }
