@@ -133,6 +133,7 @@ namespace innosphere_be.Mappings
             //JobApplication
             // JobApplication
             CreateMap<JobApplication, JobApplicationModel>()
+                .ForMember(dest => dest.WorkerId, opt => opt.MapFrom(src => src.Worker != null ? src.Worker.Id : 0))
                 .ForMember(dest => dest.JobTitle, opt => opt.MapFrom(src =>
                     src.JobPosting != null ? src.JobPosting.Title : string.Empty))
                 .ForMember(dest => dest.WorkerName, opt => opt.MapFrom(src =>
@@ -147,6 +148,7 @@ namespace innosphere_be.Mappings
 
             // Worker to WorkerProfileModel mapping for JobApplication responses
             CreateMap<Worker, WorkerProfileModel>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.Skills, opt => opt.MapFrom(src => src.Skills))
                 .ForMember(dest => dest.Bio, opt => opt.MapFrom(src => src.Bio))
