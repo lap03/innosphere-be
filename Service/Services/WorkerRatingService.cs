@@ -58,12 +58,28 @@ namespace Service.Services
             }
             if (jobPosting == null)
                 throw new KeyNotFoundException("Job posting not found.");
-            if (!string.Equals(jobPosting.Status, "COMPLETED", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Job posting must be COMPLETED to rate.");
+            if (!string.Equals(jobPosting.Status, "COMPLETED", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(jobPosting.Status, "CLOSED", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Job posting must be COMPLETED or CLOSED to rate.");
 
-            // 3. Kiểm tra chi tiết đánh giá
+            // 3. Kiểm tra Worker tồn tại
+            var workerRepository = _unitOfWork.GetRepository<Worker>();
+            var existingWorker = await workerRepository.GetByIdAsync(model.WorkerId);
+            if (existingWorker == null)
+                throw new KeyNotFoundException("Worker not found.");
+
+            // 4. Kiểm tra chi tiết đánh giá
             if (model.Details == null || !model.Details.Any())
                 throw new ArgumentException("Details are required.");
+
+            // 5. Kiểm tra tất cả RatingCriteria tồn tại
+            var ratingCriteriaRepo = _unitOfWork.GetRepository<RatingCriteria>();
+            foreach (var detail in model.Details)
+            {
+                var criteria = await ratingCriteriaRepo.GetByIdAsync(detail.RatingCriteriaId);
+                if (criteria == null)
+                    throw new KeyNotFoundException($"Rating criteria with ID {detail.RatingCriteriaId} not found.");
+            }
 
             float avg = (float)model.Details.Average(x => x.Score);
 
@@ -73,25 +89,28 @@ namespace Service.Services
                 WorkerId = model.WorkerId,
                 RatingValue = avg,
                 Comment = model.Comment,
-                RatedAt = DateTime.UtcNow,
-                Details = new List<WorkerRatingCriteria>()
+                RatedAt = DateTime.UtcNow
             };
-
-            foreach (var detail in model.Details)
-            {
-                workerRating.Details.Add(new WorkerRatingCriteria
-                {
-                    RatingCriteriaId = detail.RatingCriteriaId,
-                    Score = detail.Score
-                });
-            }
 
             await _unitOfWork.GetRepository<WorkerRating>().AddAsync(workerRating);
             await _unitOfWork.SaveChangesAsync();
 
+            // Add rating criteria separately
+            var workerRatingCriteriaRepo = _unitOfWork.GetRepository<WorkerRatingCriteria>();
+            foreach (var detail in model.Details)
+            {
+                var criteriaDetail = new WorkerRatingCriteria
+                {
+                    WorkerRatingId = workerRating.Id,
+                    RatingCriteriaId = detail.RatingCriteriaId,
+                    Score = detail.Score
+                };
+                await workerRatingCriteriaRepo.AddAsync(criteriaDetail);
+            }
+            await _unitOfWork.SaveChangesAsync();
+
             // Cập nhật lại Rating và TotalRatings cho Worker
-            var workerRepo = _unitOfWork.GetRepository<Worker>();
-            var worker = await workerRepo.GetByIdAsync(model.WorkerId);
+            var worker = await workerRepository.GetByIdAsync(model.WorkerId);
             if (worker != null)
             {
                 var ratings = await _unitOfWork.GetRepository<WorkerRating>()
@@ -100,7 +119,7 @@ namespace Service.Services
                 worker.TotalRatings = ratings.Count();
                 worker.Rating = worker.TotalRatings > 0 ? (float)ratings.Average(r => r.RatingValue) : 0;
 
-                await workerRepo.Update(worker);
+                await workerRepository.Update(worker);
                 await _unitOfWork.SaveChangesAsync();
             }
         }

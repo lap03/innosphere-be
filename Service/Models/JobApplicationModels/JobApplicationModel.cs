@@ -13,6 +13,7 @@ namespace Service.Models.JobApplicationModels
         public int JobPostingId { get; set; }
         public JobPostingModel JobPosting { get; set; }
         public int? ResumeId { get; set; }
+        public int WorkerId { get; set; } // Worker ID for rating
         public DateTime AppliedAt { get; set; }
         public string Status { get; set; }
         public string CoverNote { get; set; }
@@ -29,6 +30,7 @@ namespace Service.Models.JobApplicationModels
     // Enhanced Worker Profile Model for JobApplication responses
     public class WorkerProfileModel
     {
+        public int Id { get; set; } // Worker ID for rating
         public string UserId { get; set; }
         public string Skills { get; set; }
         public string Bio { get; set; }

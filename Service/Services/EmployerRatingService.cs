@@ -49,6 +49,7 @@ namespace Service.Services
             if (!string.Equals(jobApplication.Status, "ACCEPTED", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Job application must be ACCEPTED to rate.");
 
+            // Kiểm tra JobPosting phải COMPLETED hoặc CLOSED
             var jobPosting = jobApplication.JobPosting ?? await _unitOfWork.GetRepository<JobPosting>().GetByIdAsync(jobApplication.JobPostingId);
             if (jobPosting == null)
                 throw new KeyNotFoundException("Job posting not found.");
