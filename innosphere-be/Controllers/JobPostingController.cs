@@ -107,7 +107,7 @@ namespace innosphere_be.Controllers
         }
 
         [HttpPut("{id}/reject")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Employer")]
         public async Task<IActionResult> Reject(int id)
         {
             var result = await _jobPostingService.UpdateJobPostingStatusAsync(id, JobPostingStatusHelper.Rejected);
