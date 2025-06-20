@@ -110,12 +110,19 @@ namespace innosphere_be.Mappings
             CreateMap<SocialLink, UpdateSocialLinkModel>().ReverseMap();
 
             // Advertisement
-            CreateMap<Advertisement, AdvertisementModel>().ReverseMap();
+            CreateMap<Advertisement, AdvertisementModel>()
+                .ForMember(dest => dest.EmployerUserName, opt => opt.MapFrom(src => src.Employer.User.UserName))
+                .ForMember(dest => dest.EmployerFullName, opt => opt.MapFrom(src => src.Employer.User.FullName))
+                .ReverseMap();
             CreateMap<Advertisement, CreateAdvertisementModel>().ReverseMap();
             CreateMap<Advertisement, UpdateAdvertisementModel>().ReverseMap();
 
             //Subscription
-            CreateMap<Subscription, SubscriptionModel>().ReverseMap();
+            CreateMap<Subscription, SubscriptionModel>()
+                .ForMember(dest => dest.EmployerUserName, opt => opt.MapFrom(src => src.Employer.User.UserName))
+                .ForMember(dest => dest.EmployerFullName, opt => opt.MapFrom(src => src.Employer.User.FullName))
+                .ForMember(dest => dest.PackageName, opt => opt.MapFrom(src => src.SubscriptionPackage.PackageName))
+                .ReverseMap();
             CreateMap<Subscription, CreateSubscriptionModel>().ReverseMap();
             CreateMap<Subscription, UpdateSubscriptionModel>().ReverseMap();
 

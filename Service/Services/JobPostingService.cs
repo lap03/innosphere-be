@@ -226,5 +226,48 @@ namespace Service.Services
             return true;
         }
 
+        /// <summary>
+        /// Admin: Lấy tất cả job posting từ tất cả employers
+        /// </summary>
+        public async Task<List<JobPostingModel>> GetAllForAdminAsync()
+        {
+            var repo = _unitOfWork.GetRepository<JobPosting>();
+            var jobTagRepo = _unitOfWork.GetRepository<JobTag>();
+
+            // Lấy tất cả job posting không bị xóa, bao gồm thông tin employer và city
+            var list = await repo.GetAllAsync(
+                jp => !jp.IsDeleted,
+                jp => jp.JobPostingTags,
+                jp => jp.City,
+                jp => jp.Employer,
+                jp => jp.Employer.BusinessType
+            );
+
+            var jobPostingModels = new List<JobPostingModel>();
+
+            foreach (var entity in list)
+            {
+                var model = _mapper.Map<JobPostingModel>(entity);
+
+                // Get JobTagIds from JobPostingTags
+                var tagIds = entity.JobPostingTags?.Select(jpt => jpt.JobTagId).ToList() ?? new List<int>();
+
+                // Get JobTag info from repo based on ids
+                if (tagIds.Any())
+                {
+                    var jobTags = await jobTagRepo.GetAllAsync(jt => tagIds.Contains(jt.Id));
+                    model.JobTags = jobTags.Select(jt => _mapper.Map<JobTagModel>(jt)).ToList();
+                }
+                else
+                {
+                    model.JobTags = new List<JobTagModel>();
+                }
+
+                jobPostingModels.Add(model);
+            }
+
+            return jobPostingModels;
+        }
+
     }
 }

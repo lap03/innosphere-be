@@ -10,5 +10,8 @@ namespace Service.Interfaces
         Task<SubscriptionModel> GetByIdAsync(int id);
         Task<bool> HardDeleteAsync(int subscriptionId, int employerId);
         Task<SubscriptionModel> PurchaseSubscriptionAsync(CreateSubscriptionModel dto);
+
+        // Admin methods
+        Task<List<SubscriptionModel>> GetAllForAdminAsync();
     }
 }

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Repository.Entities;
 using Repository.Interfaces;
+using Service.Interfaces;
 using Service.Models.AdvertisementModels;
 using System;
 using System.Collections.Generic;
@@ -233,6 +234,50 @@ public class AdvertisementService : IAdvertisementService
         await _unitOfWork.SaveChangesAsync();
 
         await CheckAndUpdateStatusAsync(entity);
+        return true;
+    }
+
+    /// <summary>
+    /// Admin: Lấy tất cả quảng cáo từ tất cả user
+    /// </summary>
+    public async Task<List<AdvertisementModel>> GetAllForAdminAsync()
+    {
+        var repo = _unitOfWork.GetRepository<Advertisement>();
+
+        // Lấy tất cả quảng cáo không bị xóa cứng, bao gồm thông tin employer và user
+        var list = await repo.GetAllAsync(ad => !ad.IsDeleted, ad => ad.Employer, ad => ad.Employer.User);
+
+        // Cập nhật trạng thái hết hạn cho từng quảng cáo
+        foreach (var entity in list)
+        {
+            await CheckAndUpdateStatusAsync(entity);
+        }
+
+        // Lấy lại danh sách đã cập nhật trạng thái
+        list = await repo.GetAllAsync(ad => !ad.IsDeleted, ad => ad.Employer, ad => ad.Employer.User);
+
+        return _mapper.Map<List<AdvertisementModel>>(list);
+    }
+
+    /// <summary>
+    /// Admin: Update advertisement status
+    /// </summary>
+    public async Task<bool> UpdateAdvertisementStatusAsync(int id, string status)
+    {
+        var repo = _unitOfWork.GetRepository<Advertisement>();
+        var entity = await repo.GetByIdAsync(id);
+
+        if (entity == null)
+            return false;
+
+        // Only allow valid statuses
+        var validStatuses = new[] { "PENDING", "ACTIVE", "INACTIVE", "EXPIRED" };
+        if (!validStatuses.Contains(status))
+            return false;
+
+        entity.AdStatus = status;
+        await repo.Update(entity);
+        await _unitOfWork.SaveChangesAsync();
         return true;
     }
 }

@@ -95,5 +95,34 @@ namespace YourNamespace.Controllers
             if (!result) return NotFound();
             return NoContent();
         }
+
+        // Admin: Lấy tất cả quảng cáo từ tất cả user
+        [HttpGet("admin/all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<List<AdvertisementModel>>> GetAllForAdmin()
+        {
+            var ads = await _advertisementService.GetAllForAdminAsync();
+            return Ok(ads);
+        }
+
+        // Admin: Approve advertisement
+        [HttpPut("{id}/approve")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> ApproveAdvertisement(int id)
+        {
+            var result = await _advertisementService.UpdateAdvertisementStatusAsync(id, "ACTIVE");
+            if (!result) return NotFound();
+            return Ok();
+        }
+
+        // Admin: Reject advertisement
+        [HttpPut("{id}/reject")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> RejectAdvertisement(int id)
+        {
+            var result = await _advertisementService.UpdateAdvertisementStatusAsync(id, "INACTIVE");
+            if (!result) return NotFound();
+            return Ok();
+        }
     }
 }

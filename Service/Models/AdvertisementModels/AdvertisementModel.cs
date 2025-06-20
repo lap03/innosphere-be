@@ -22,5 +22,9 @@ namespace Service.Models.AdvertisementModels
         public int? MaxImpressions { get; set; }
         public int CurrentImpressions { get; set; }
         public string TransactionId { get; set; }
+
+        // Related data for admin display
+        public string? EmployerUserName { get; set; }
+        public string? EmployerFullName { get; set; }
     }
 }

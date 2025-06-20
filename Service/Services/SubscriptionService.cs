@@ -153,5 +153,37 @@ namespace Service.Services
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
+
+        /// <summary>
+        /// Admin: Lấy tất cả subscription từ tất cả employers
+        /// </summary>
+        public async Task<List<SubscriptionModel>> GetAllForAdminAsync()
+        {
+            var repo = _unitOfWork.GetRepository<Subscription>();
+
+            // Lấy tất cả subscription, bao gồm thông tin employer, user và package
+            var subscriptions = await repo.GetAllAsync(
+                null, // No filter, get all
+                s => s.Employer,
+                s => s.Employer.User,
+                s => s.SubscriptionPackage
+            );
+
+            // Cập nhật trạng thái hết hạn cho từng subscription
+            foreach (var sub in subscriptions)
+            {
+                await UpdateExpirationStatusAsync(sub);
+            }
+
+            // Lấy lại danh sách đã cập nhật trạng thái
+            subscriptions = await repo.GetAllAsync(
+                null, // No filter, get all
+                s => s.Employer,
+                s => s.Employer.User,
+                s => s.SubscriptionPackage
+            );
+
+            return _mapper.Map<List<SubscriptionModel>>(subscriptions);
+        }
     }
 }
