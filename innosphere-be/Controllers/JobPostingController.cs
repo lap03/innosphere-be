@@ -129,5 +129,14 @@ namespace innosphere_be.Controllers
             var result = await _jobPostingService.UpdateJobPostingStatusAsync(id, JobPostingStatusHelper.Completed);
             return result ? Ok() : NotFound();
         }
+
+        // Admin: Lấy tất cả job posting từ tất cả employers
+        [HttpGet("admin/all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<List<JobPostingModel>>> GetAllForAdmin()
+        {
+            var jobPostings = await _jobPostingService.GetAllForAdminAsync();
+            return Ok(jobPostings);
+        }
     }
 }

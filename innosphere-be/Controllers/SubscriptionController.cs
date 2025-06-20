@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 using Service.Models.SubscriptionModels;
 using System;
@@ -99,6 +100,15 @@ namespace innosphere_be.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        // Admin: Lấy tất cả subscription từ tất cả employers
+        [HttpGet("admin/all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllForAdmin()
+        {
+            var subscriptions = await _subscriptionService.GetAllForAdminAsync();
+            return Ok(subscriptions);
         }
     }
 }

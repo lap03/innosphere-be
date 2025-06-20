@@ -10,5 +10,8 @@ namespace Service.Interfaces
         Task<PagedResultModel<JobPostingModel>> GetJobPostingsAsync(JobPostingFilterModel filter);
         Task<IEnumerable<JobPostingModel>> GetJobPostingsByEmployerAsync(int employerId, string? status = null);
         Task<bool> UpdateJobPostingStatusAsync(int jobPostingId, string status);
+
+        // Admin methods
+        Task<List<JobPostingModel>> GetAllForAdminAsync();
     }
 }

@@ -17,5 +17,10 @@ namespace Service.Models.SubscriptionModels
         public float AmountPaid { get; set; }
         public string PaymentStatus { get; set; }
         public string TransactionId { get; set; }
+
+        // Related data for admin display
+        public string? EmployerUserName { get; set; }
+        public string? EmployerFullName { get; set; }
+        public string? PackageName { get; set; }
     }
 }
