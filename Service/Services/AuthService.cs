@@ -305,7 +305,8 @@ namespace Service.Services
         public async Task<string> CreateRefreshToken(User user)
         {
             var code = Guid.NewGuid().ToString();
-            var expiredDate = DateTime.UtcNow.AddHours(int.Parse(_configuration["JWT:RefreshTokenExpiredByHours"]));
+            //var expiredDate = DateTime.UtcNow.AddHours(int.Parse(_configuration["JWT:RefreshTokenExpiredByHours"]));
+            var expiredDate = DateTime.UtcNow.AddDays(int.Parse(_configuration["JWT:RefreshTokenExpiredByDays"]));
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Jti, code), // Unique ID của token
