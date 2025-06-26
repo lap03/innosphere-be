@@ -84,6 +84,7 @@ namespace Service.Services
             if (resume.IsDeleted) throw new KeyNotFoundException("Resume has already been deleted");
 
             await _unitOfWork.GetRepository<Resume>().SoftDelete(resume);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task RestoreResumeAsync(int id)

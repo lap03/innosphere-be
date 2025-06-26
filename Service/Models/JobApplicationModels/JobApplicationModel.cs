@@ -22,6 +22,7 @@ namespace Service.Models.JobApplicationModels
         public string JobTitle { get; set; }
         public string WorkerName { get; set; }
         public string ResumeTitle { get; set; }
+        public string ResumeUrlCvs { get; set; } // Added for CV download functionality
 
         // Worker Profile Information
         public WorkerProfileModel WorkerProfile { get; set; }
