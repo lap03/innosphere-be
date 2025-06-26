@@ -147,6 +147,8 @@ namespace innosphere_be.Mappings
                     src.Worker != null && src.Worker.User != null ? src.Worker.User.FullName : string.Empty))
                 .ForMember(dest => dest.ResumeTitle, opt => opt.MapFrom(src =>
                     src.Resume != null ? src.Resume.Title : string.Empty))
+                .ForMember(dest => dest.ResumeUrlCvs, opt => opt.MapFrom(src =>
+                    src.Resume != null ? src.Resume.UrlCvs : string.Empty))
                 // ✅ Lồng jobPosting vào model
                 .ForMember(dest => dest.JobPosting, opt => opt.MapFrom(src => src.JobPosting))
                 // ✅ Map Worker Profile information
