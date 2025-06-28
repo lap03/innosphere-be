@@ -44,6 +44,6 @@ jobs:
         port: 22
         script: |
           cd code/innosphere-be  # Cập nhật đường dẫn tuyệt đối
-          docker compose down          
+          docker compose down
           docker pull tinlek17/innospherebe:latest
-          docker compose up -d         
+          docker compose up -d
