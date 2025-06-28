@@ -41,6 +41,7 @@ namespace YourNamespace.Controllers
         {
             var ad = await _advertisementService.GetByIdAsync(id, employerId);
             return Ok(ad);
+
         }
 
         // Tạo quảng cáo mới
