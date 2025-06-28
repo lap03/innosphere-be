@@ -43,10 +43,7 @@ jobs:
         password: ${{ secrets.VPS_PASSWORD }}
         port: 22
         script: |
-          # Dừng container hiện tại
-          cd /code/innosphere-be
-          docker-compose down
-          # Kéo image mới từ Docker Hub
+          cd code/innosphere-be  # Cập nhật đường dẫn tuyệt đối
+          docker compose down          
           docker pull tinlek17/innospherebe:latest
-          # Chạy lại ứng dụng
-          docker-compose up -d
+          docker compose up -d         
