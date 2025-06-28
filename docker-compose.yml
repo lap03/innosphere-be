@@ -1,12 +1,9 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
   innosphere-be:
-    image: innospherebe
+    image: tinlek17/innospherebe:latest  # Thay bằng username Docker Hub của bạn
     container_name: innosphere-api
-    build:
-      context: .
-      dockerfile: innosphere-be/Dockerfile
     ports:
       - "8080:8080"
     environment:
