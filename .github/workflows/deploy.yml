@@ -43,7 +43,7 @@ jobs:
         password: ${{ secrets.VPS_PASSWORD }}
         port: 22
         script: |
-          cd code/innosphere-be  # Cập nhật đường dẫn tuyệt đối
+          cd /root/code/innosphere-be  # Sử dụng đường dẫn tuyệt đối chính xác
           docker compose down
           docker pull tinlek17/innospherebe:latest
           docker compose up -d
