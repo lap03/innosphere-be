@@ -99,7 +99,7 @@ namespace YourNamespace.Controllers
 
         // Admin: Lấy tất cả quảng cáo từ tất cả user
         [HttpGet("admin/all")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<ActionResult<List<AdvertisementModel>>> GetAllForAdmin()
         {
             var ads = await _advertisementService.GetAllForAdminAsync();
