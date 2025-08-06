@@ -20,6 +20,6 @@ namespace innosphere_be.Models.Requests.AuthRequest
 
         [Required]
         [Phone]
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
     }
 }

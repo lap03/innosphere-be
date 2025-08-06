@@ -51,7 +51,8 @@ namespace innosphere_be.Controllers
                 FullName = model.FullName,
                 AvatarUrl = model.AvatarUrl,
                 Address = model.Address,
-                PasswordHash = model.Password
+                PasswordHash = model.Password,
+                PhoneNumber = model.PhoneNumber
             };
             
             await _authService.RegisterWorkerAsync(cancellationToken, user);
@@ -73,6 +74,7 @@ namespace innosphere_be.Controllers
                 FullName = model.FullName,
                 AvatarUrl = model.AvatarUrl,
                 Address = model.Address,
+                PhoneNumber = model.PhoneNumber,
                 PasswordHash = model.Password
             };
             
