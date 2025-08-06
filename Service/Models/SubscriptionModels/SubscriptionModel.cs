@@ -22,5 +22,6 @@ namespace Service.Models.SubscriptionModels
         public string? EmployerUserName { get; set; }
         public string? EmployerFullName { get; set; }
         public string? PackageName { get; set; }
+        public string? EmployerPhoneNumber { get; set; } // <-- Thêm dòng này
     }
 }

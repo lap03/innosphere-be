@@ -113,6 +113,7 @@ namespace innosphere_be.Mappings
             CreateMap<Advertisement, AdvertisementModel>()
                 .ForMember(dest => dest.EmployerUserName, opt => opt.MapFrom(src => src.Employer.User.UserName))
                 .ForMember(dest => dest.EmployerFullName, opt => opt.MapFrom(src => src.Employer.User.FullName))
+                .ForMember(dest => dest.EmployerPhoneNumber, opt => opt.MapFrom(src => src.Employer.User.PhoneNumber)) // <-- Add this line
                 .ReverseMap();
             CreateMap<Advertisement, CreateAdvertisementModel>().ReverseMap();
             CreateMap<Advertisement, UpdateAdvertisementModel>().ReverseMap();
@@ -122,6 +123,7 @@ namespace innosphere_be.Mappings
                 .ForMember(dest => dest.EmployerUserName, opt => opt.MapFrom(src => src.Employer.User.UserName))
                 .ForMember(dest => dest.EmployerFullName, opt => opt.MapFrom(src => src.Employer.User.FullName))
                 .ForMember(dest => dest.PackageName, opt => opt.MapFrom(src => src.SubscriptionPackage.PackageName))
+                .ForMember(dest => dest.EmployerPhoneNumber, opt => opt.MapFrom(src => src.Employer.User.PhoneNumber)) // <-- Thêm dòng này
                 .ReverseMap();
             CreateMap<Subscription, CreateSubscriptionModel>().ReverseMap();
             CreateMap<Subscription, UpdateSubscriptionModel>().ReverseMap();

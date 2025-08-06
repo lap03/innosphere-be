@@ -26,5 +26,6 @@ namespace Service.Models.AdvertisementModels
         // Related data for admin display
         public string? EmployerUserName { get; set; }
         public string? EmployerFullName { get; set; }
+        public string? EmployerPhoneNumber { get; set; } // <-- Add this line
     }
 }
